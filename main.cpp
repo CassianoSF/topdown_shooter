@@ -56,7 +56,7 @@ public:
 
     void render(){
         glPushMatrix();
-        glBegin(GL_QUADS);
+        glBegin(GL_POLYGON  );
         glColor3f(cor.r, cor.g, cor.b);
         glVertex2f(left(), bot());
         glVertex2f(left(), top());
@@ -94,8 +94,8 @@ Cor    VERDE(0.0,1.0,0.0);
 Cor     AZUL(0.0,0.0,1.0);
 Cor  AMARELO(1.0,1.0,0.0);
 Cor    PRETO(0.0,0.0,0.0);
-
 GLfloat win = 250.0f;
+
 Texto  texto("(0,0)", PRETO);
 Objeto player(0.0f,  0.0f, 20.0f, 20.0f, AMARELO); 
 Objeto pedra(40.0f, 40.0f, 30.0f, 30.0f, CINZA);
@@ -122,7 +122,7 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h){
     gluOrtho2D (-win, win, -win, win);
 }
 
-void atualizar(){
+void Atualizar(){
     if(player.colide(pedra)){
         player.cor.set(VERMELHO);
     }else{
@@ -148,18 +148,18 @@ void TeclasEspeciais(int key, int x, int y){
 }
 
 int main(int argc, char** argv) {
-    glutInit(&argc, argv); // Inicializa GLUT
-    glutInitDisplayMode(GLUT_DOUBLE); // Habilita double buffer(geralmente utilizado com animação) mas pode ser SINGLE também
-    glutInitWindowSize(700, 700);
-    glutInitWindowPosition(10,10);
-    glutCreateWindow("Exemplo Aula");
+    glutInit(&argc, argv);                   // Inicializa GLUT
+    glutInitDisplayMode(GLUT_DOUBLE);        // Habilita double buffer(geralmente utilizado com animação) mas pode ser SINGLE também
+    glutInitWindowSize(700, 700);            // Inicializa tamanho da janela
+    glutInitWindowPosition(100,10);          // Posição inicial da janela na tela    
+    glutCreateWindow("Exemplo Aula");        // Cria janela com titulo
     glutDisplayFunc(Desenha);
     glutReshapeFunc(AlteraTamanhoJanela);
     // glutKeyboardFunc(teclado);
     glutSpecialFunc(TeclasEspeciais); 
     // glutPassiveMotionFunc(cursormouse);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Inicializar a cor de fundo da tela
-    glutIdleFunc(atualizar);
-    glutMainLoop(); // Chama a máquina de estados do OpenGL e processa todas as mensagens
+    glutIdleFunc(Atualizar);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);    // Inicializar a cor de fundo da tela
+    glutMainLoop();                          // Chama a máquina de estados do OpenGL e processa todas as mensagens
     return 0;
 }
