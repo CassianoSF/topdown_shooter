@@ -12,7 +12,15 @@ public:
 
 class Cor{
 public:
-    float r, g, b;    
+    float r, g, b;
+    Cor(): r(0.0f), g(0.0f), b(0.0f){ }
+    Cor(float red ,float green ,float blue): r(red), g(green), b(blue){ }
+
+    void set(Cor c){
+        r = c.r;
+        g = c.g;
+        b = c.b;      
+    }
 };
 
 class Objeto{
@@ -21,10 +29,8 @@ public:
     Cor cor;
     float altura, largura;
     
-    Objeto(float x, float y, float alt, float larg, float r, float g, float b){
-        cor.r = r;
-        cor.g = g;
-        cor.b = b;
+    Objeto(float x, float y, float alt, float larg, Cor c){
+        cor.set(c);
         posicao.x = x;
         posicao.y = y;
         altura  = alt;
@@ -48,12 +54,6 @@ public:
                   (bot()>obj.top()   ||   top()<obj.bot())));
     }
 
-    void set_cor(float r, float g, float b){
-        cor.r = r;
-        cor.g = g;
-        cor.b = b;
-    }
-
     void render(){
         glPushMatrix();
         glBegin(GL_QUADS);
@@ -67,29 +67,38 @@ public:
     }
 };
 
-
 class Texto{
 public:
-    char conteudo_texto[20];
-    Texto(char *conteudo){
-        strcpy(conteudo_texto, conteudo);
+    string conteudo_texto;
+    Cor cor;
+
+    Texto(string conteudo, Cor c){
+        conteudo_texto = conteudo;
+        cor.set(c);
     }
 
-    void render(GLfloat win, char *string){
+    void render(GLfloat win){
+        glColor3f(cor.r, cor.g, cor.b);
         glPushMatrix();
         glRasterPos2f(-win, win-(win*0.08));
-        while(*string)
-            glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,*string++);
+        for (int i = 0; i < sizeof conteudo_texto; ++i){
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, conteudo_texto[i]);
+        }
         glPopMatrix();
     }
 };
 
+Cor    CINZA(0.5,0.5,0.5);
+Cor VERMELHO(1.0,0.0,0.0);
+Cor    VERDE(0.0,1.0,0.0);
+Cor     AZUL(0.0,0.0,1.0);
+Cor  AMARELO(1.0,1.0,0.0);
+Cor    PRETO(0.0,0.0,0.0);
 
-GLfloat win;
-
-Texto  texto("(0,0)");
-Objeto player(0.0f,  0.0f, 20.0f, 20.0f, 1.0f, 1.0f, 1.0f); 
-Objeto pedra(40.0f, 40.0f, 30.0f, 30.0f, 1.0f, 1.0f, 0.0f);
+GLfloat win = 250.0f;
+Texto  texto("(0,0)", PRETO);
+Objeto player(0.0f,  0.0f, 20.0f, 20.0f, AMARELO); 
+Objeto pedra(40.0f, 40.0f, 30.0f, 30.0f, CINZA);
 
 void Desenha(void){
     glMatrixMode(GL_MODELVIEW);
@@ -97,17 +106,9 @@ void Desenha(void){
     glClear(GL_COLOR_BUFFER_BIT);
     pedra.render();
     player.render();
-    glColor3f(1.0f,1.0f,1.0f);
     texto.render(win);
-    //glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
+    glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glutSwapBuffers();
-}
-
-// Inicializa parâmetros de rendering
-void inicializa() {
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Inicializar a cor de fundo da tela
-    win=150.0f;
-    strcpy(conteudo_texto, "(0,0)");
 }
 
 // Função callback chamada quando o tamanho da janela é alterado 
@@ -123,9 +124,9 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h){
 
 void atualizar(){
     if(player.colide(pedra)){
-        player.set_cor(0.5f,0.5f,0.5f);
+        player.cor.set(VERMELHO);
     }else{
-        player.set_cor(1.0f,0.0f,0.0f);
+        player.cor.set(AMARELO);
     }
     glutPostRedisplay();
 }
@@ -156,10 +157,9 @@ int main(int argc, char** argv) {
     glutReshapeFunc(AlteraTamanhoJanela);
     // glutKeyboardFunc(teclado);
     glutSpecialFunc(TeclasEspeciais); 
-    //glutPassiveMotionFunc(cursormouse);
-    inicializa();
+    // glutPassiveMotionFunc(cursormouse);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Inicializar a cor de fundo da tela
     glutIdleFunc(atualizar);
-    // initGL(); // OpenGL initialization
     glutMainLoop(); // Chama a máquina de estados do OpenGL e processa todas as mensagens
     return 0;
 }
