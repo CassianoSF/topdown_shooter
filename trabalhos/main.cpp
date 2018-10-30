@@ -200,8 +200,11 @@ void Atualizar(){
     // glutPostRedisplay();
 }
 
+
+// Função de entrada do teclado que calcula as posições dos braços com base na inclinação
 void teclado(unsigned char tecla, int x, int y){
     switch(tecla){
+        // Controla o braço 3 para o sentido anti-horário
         case 'q':
             braco3.inclinacao += 1;
             garra1.posicao.x = braco3.posicao.x + braco3.altura  * cosf((braco3.inclinacao+78)*3.1415/180);
@@ -212,6 +215,7 @@ void teclado(unsigned char tecla, int x, int y){
             garra2.posicao.y = braco3.posicao.y + braco3.altura * sinf(((braco3.inclinacao+90)*3.1415)/180);
             garra2.inclinacao = braco3.inclinacao;
             break;
+        // Controla o braço 3 para o sentido horário
         case 'w':
             braco3.inclinacao -= 1;
             garra1.posicao.x = braco3.posicao.x + braco3.altura  * cosf((braco3.inclinacao+78)*3.1415/180);
@@ -222,6 +226,7 @@ void teclado(unsigned char tecla, int x, int y){
             garra2.posicao.y = braco3.posicao.y + braco3.altura * sinf(((braco3.inclinacao+90)*3.1415)/180);
             garra2.inclinacao = braco3.inclinacao;
             break;
+        // Controla o braço 2 para o sentido anti-horário
         case 'a':
             braco2.inclinacao += 1;
             braco3.inclinacao += 1;
@@ -239,6 +244,7 @@ void teclado(unsigned char tecla, int x, int y){
             garra2.posicao.y = braco3.posicao.y + braco3.altura * sinf(((braco3.inclinacao+90)*3.1415)/180);
             garra2.inclinacao = braco3.inclinacao;
             break;
+        // Controla o braço 2 para o sentido horário
         case 's':
             braco2.inclinacao -= 1;
             braco3.inclinacao -= 1;
@@ -256,6 +262,7 @@ void teclado(unsigned char tecla, int x, int y){
             garra2.posicao.y = braco3.posicao.y + braco3.altura * sinf(((braco3.inclinacao+90)*3.1415)/180);
             garra2.inclinacao = braco3.inclinacao;
             break;
+        // Controla o braço 3 para o sentido anti-horário
         case 'z':
             braco1.inclinacao += 1;
             braco2.inclinacao += 1;
@@ -281,6 +288,7 @@ void teclado(unsigned char tecla, int x, int y){
             garra2.inclinacao = braco3.inclinacao;
             break;
         case 'x':
+        // Controla o braço 3 para o sentido horário
             braco1.inclinacao -= 1;
             braco2.inclinacao -= 1;
             braco2.posicao.x = braco1.altura  * cosf((braco1.inclinacao+90)*3.1415/180) - 10;
@@ -306,6 +314,7 @@ void teclado(unsigned char tecla, int x, int y){
             garra2.inclinacao = braco3.inclinacao;
             break;
         case ' ':
+        // Controla abrir e fechar da garra 
             if (abre_e_fecha < 10){
                 abre_e_fecha +=1;
                 garra1.posicao.x = garra1.posicao.x + (garra2.posicao.x - garra1.posicao.x)/10;
@@ -319,7 +328,7 @@ void teclado(unsigned char tecla, int x, int y){
                 garra1.posicao.y = garra1.posicao.y - (garra2.posicao.y - garra1.posicao.y)/10;
                 garra2.posicao.x = garra2.posicao.x - (garra1.posicao.x - garra2.posicao.x)/10;
                 garra2.posicao.y = garra2.posicao.y - (garra1.posicao.y - garra2.posicao.y)/10;
-                if (abre_e_fecha == 20){
+                if (abre_e_fecha > 20){
                     abre_e_fecha = 0;
                 }
             }
@@ -351,6 +360,9 @@ void cursormouse(int x, int y){
     char temp[20];
     sprintf(temp, " (%d, %d)", x, y);
     texto.set_texto(temp);
+    player.inclinacao = atan((x/y))
+        glutPostRedisplay();
+
 }
 
 void processMainMenu(int option){

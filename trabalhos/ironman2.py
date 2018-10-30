@@ -9,9 +9,6 @@ from OpenGL.GLUT import *
 window = 0
 width, height = 500, 500
 
-
-
-
 def base():
    glBegin(GL_POLYGON)
    glColor3f(1.0, 1.0, 1.0) 
