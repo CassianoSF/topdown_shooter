@@ -12,8 +12,9 @@ using namespace std;
 
 GLfloat win = 250.0f;
 int tempo = 0;
-
 bool senta_o_dedo = false;
+
+
 
 class Coordenada {
 public:
@@ -53,18 +54,17 @@ public:
     float right(){ return posicao.x - largura/2; }
     float left() { return posicao.x + largura/2; }
 
-    void caminha(string direcao){
-        if(direcao == "UP")    { posicao.y += 1; }
-        if(direcao == "DOWN")  { posicao.y -= 1; }
-        if(direcao == "LEFT")  { posicao.x -= 1; }
-        if(direcao == "RIGHT") { posicao.x += 1; }
+    void caminha(string direcao, float velocidade){
+        if(direcao == "UP")    { posicao.y += velocidade; }
+        if(direcao == "DOWN")  { posicao.y -= velocidade; }
+        if(direcao == "LEFT")  { posicao.x -= velocidade; }
+        if(direcao == "RIGHT") { posicao.x += velocidade; }
     }
 
     bool colide(Retangulo obj){
         return(!((left()>obj.right() || right()<obj.left()) || 
                   (bot()>obj.top()   ||   top()<obj.bot())));
     }
-
 
     void render(){
         glPushMatrix();
@@ -95,7 +95,6 @@ public:
         conteudo_texto = content;
     }
 
-
     void render(){
         glColor3f(cor.r, cor.g, cor.b);
         glPushMatrix();
@@ -122,7 +121,6 @@ public:
         inclinacao = angulo;
         raio = r;
     } 
-
 
     void caminha(string direcao){
         if(direcao == "UP")    { posicao.y += 1; }
@@ -176,8 +174,6 @@ public:
         }
         glEnd();
 
-
-
         glBegin(GL_POLYGON);
         glColor3f(cor.r, cor.g, cor.b);
         for(int i = 0; i < num_segmentos; i++){
@@ -188,7 +184,6 @@ public:
         }
         glEnd();
         glPopMatrix();
-
     }
 };
 
@@ -202,12 +197,11 @@ Cor  AMARELO(1.0,1.0,0.0);
 Cor    PRETO(0.0,0.0,0.0);
 Cor  LARANJA(1.0,0.6,0.3);
 
-
 Texto  texto("(0,0)", PRETO);
 
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 
-void Desenha(void){
+void Render(void){
     // REDERIZAÇÃO
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();            
@@ -223,9 +217,7 @@ void Desenha(void){
 
 // Função callback chamada quando o tamanho da janela é alterado 
 void AlteraTamanhoJanela(GLsizei w, GLsizei h){ 
-    // Especifica as dimensões da Viewport
-    glViewport(0, 0, w, h);        
-
+    glViewport(0, 0, w, h); // Especifica as dimensões da Viewport
     // Inicializa o sistema de coordenadas
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -236,21 +228,6 @@ void Atualizar(){
     tempo++;
     if (tempo == 100)
         tempo = 0;
-    // if(
-    //     player.colide(caixa1) ||
-    //     player.colide(caixa2) ||
-    //     player.colide(caixa3) ||
-    //     player.colide(caixa4)
-    // ){
-    //     // RESETA POSIÇÃO
-    //     player.posicao.x = 210.0f;
-    //     player.posicao.y = -210.0f;
-    // }
-
-    //     // FICA VERDE SE GANHAR
-    // if (player.colide(objetivo)){
-    //     player.cor.set(VERDE);
-    // }
 }
 
 
@@ -269,27 +246,19 @@ void volta (string dir){
 void teclado(unsigned char tecla, int x, int y){
     switch(tecla){
         case 'w':
-            // player.caminha("UP");
-            // player.caminha("UP");
-            // player.caminha("UP");
+            // player.caminha("UP", 3);
             // volta("DOWN");
             break;
         case 's':
-            // player.caminha("DOWN");
-            // player.caminha("DOWN");
-            // player.caminha("DOWN");
+            // player.caminha("DOWN", 3);
             // volta("UP");
             break;
         case 'a':
-            // player.caminha("LEFT");
-            // player.caminha("LEFT");
-            // player.caminha("LEFT");
+            // player.caminha("LEFT", 3);
             // volta("RIGHT");
             break;
         case 'd':
-            // player.caminha("RIGHT");
-            // player.caminha("RIGHT");
-            // player.caminha("RIGHT");
+            // player.caminha("RIGHT", 3);
             // volta("LEFT");
             break;
     }
@@ -300,7 +269,7 @@ void cursormouse(int x, int y){
     player.mira(x, y);
     y = -y + 350;
     x = x - 350;
-    char temp[20];
+    char temp[100];
     sprintf(temp, " (%d, %d)  %f", x, y, player.inclinacao);
     texto.set_texto(temp);
 }
@@ -324,7 +293,7 @@ int main(int argc, char** argv) {
     glutInitWindowSize(700, 700);            // Inicializa tamanho da janela
     glutInitWindowPosition(100,10);          // Posição inicial da janela na tela    
     glutCreateWindow("Exemplo Aula");        // Cria janela com titulo
-    glutDisplayFunc(Desenha);
+    glutDisplayFunc(Render);                 // Seta função de renderização
     glutReshapeFunc(AlteraTamanhoJanela);
     glutKeyboardFunc(teclado);
     // glutSpecialFunc(TeclasEspeciais); 
@@ -334,5 +303,5 @@ int main(int argc, char** argv) {
     glutIdleFunc(Atualizar);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);    // Inicializar a cor de fundo da tela
     glutMainLoop();                          // Chama a máquina de estados do OpenGL e processa todas as mensagens
-    return 0;
+    return 0;                                // nunca retorna
 }
