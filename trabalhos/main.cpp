@@ -360,9 +360,6 @@ void cursormouse(int x, int y){
     char temp[20];
     sprintf(temp, " (%d, %d)", x, y);
     texto.set_texto(temp);
-    player.inclinacao = atan((x/y))
-        glutPostRedisplay();
-
 }
 
 void processMainMenu(int option){

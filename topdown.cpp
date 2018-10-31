@@ -63,7 +63,7 @@ public:
 
     bool colide(Retangulo obj){
         return(!((left()>obj.right() || right()<obj.left()) || 
-                  (bot()>obj.top()   ||   top()<obj.bot())));
+          (bot()>obj.top()   ||   top()<obj.bot())));
     }
 
     void render(){
@@ -248,19 +248,19 @@ void teclado(unsigned char tecla, int x, int y){
         case 'w':
             // player.caminha("UP", 3);
             // volta("DOWN");
-            break;
+        break;
         case 's':
             // player.caminha("DOWN", 3);
             // volta("UP");
-            break;
+        break;
         case 'a':
             // player.caminha("LEFT", 3);
             // volta("RIGHT");
-            break;
+        break;
         case 'd':
             // player.caminha("RIGHT", 3);
             // volta("LEFT");
-            break;
+        break;
     }
     glutPostRedisplay();
 }
@@ -299,8 +299,8 @@ int main(int argc, char** argv) {
     // glutSpecialFunc(TeclasEspeciais); 
     glutPassiveMotionFunc(cursormouse);
     glutMouseFunc(mouseClicks);
-    glutMotionFunc(shooting);
-    glutIdleFunc(Atualizar);
+    glutMotionFunc(shooting);           
+    glutIdleFunc(Atualizar);                 // Seta função de atualização
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);    // Inicializar a cor de fundo da tela
     glutMainLoop();                          // Chama a máquina de estados do OpenGL e processa todas as mensagens
     return 0;                                // nunca retorna
