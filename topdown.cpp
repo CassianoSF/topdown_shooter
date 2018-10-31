@@ -13,7 +13,7 @@ using namespace std;
 GLfloat win = 250.0f;
 int tempo = 0;
 bool senta_o_dedo = false;
-
+int* keyStates = new int[256];
 
 
 class Coordenada {
@@ -31,53 +31,6 @@ public:
         r = c.r;
         g = c.g;
         b = c.b;      
-    }
-};
-
-class Retangulo {
-public:
-    Coordenada posicao;
-    Cor cor;
-    float altura, largura, inclinacao;
-    
-    Retangulo(float x, float y, float alt, float larg, float angulo, Cor c){
-        cor.set(c);
-        posicao.x = x;
-        posicao.y = y;
-        altura  = alt;
-        largura = larg;
-        inclinacao = angulo;
-    }
-
-    float top()  { return posicao.y - altura/2;  }
-    float bot()  { return posicao.y + altura/2;  }
-    float right(){ return posicao.x - largura/2; }
-    float left() { return posicao.x + largura/2; }
-
-    void caminha(string direcao, float velocidade){
-        if(direcao == "UP")    { posicao.y += velocidade; }
-        if(direcao == "DOWN")  { posicao.y -= velocidade; }
-        if(direcao == "LEFT")  { posicao.x -= velocidade; }
-        if(direcao == "RIGHT") { posicao.x += velocidade; }
-    }
-
-    bool colide(Retangulo obj){
-        return(!((left()>obj.right() || right()<obj.left()) || 
-          (bot()>obj.top()   ||   top()<obj.bot())));
-    }
-
-    void render(){
-        glPushMatrix();
-        glTranslatef(left(), bot(), 0.0f);
-        glRotatef(inclinacao, 0, 0, 1);
-        glBegin(GL_POLYGON);
-        glColor3f(cor.r, cor.g, cor.b);
-        glVertex2f(-largura/2, -altura/2);
-        glVertex2f(-largura/2, altura/2);
-        glVertex2f(largura/2,  altura/2);
-        glVertex2f(largura/2, -altura/2);    
-        glEnd();
-        glPopMatrix();
     }
 };
 
@@ -112,6 +65,7 @@ public:
     Cor cor;   
     int num_segmentos;
     float raio, inclinacao;
+    string caminhando;
 
     Player(float x, float y, float r, int seg, float angulo, Cor c){
         cor.set(c);
@@ -122,18 +76,25 @@ public:
         raio = r;
     } 
 
-    void caminha(string direcao){
-        if(direcao == "UP")    { posicao.y += 1; }
-        if(direcao == "DOWN")  { posicao.y -= 1; }
-        if(direcao == "LEFT")  { posicao.x -= 1; }
-        if(direcao == "RIGHT") { posicao.x += 1; }
+    void caminha(){
+        int velocidade;
+        if ((keyStates['w'] + keyStates['s'] + keyStates['a'] + keyStates['d']) > 1 ||
+            (keyStates['W'] + keyStates['S'] + keyStates['A'] + keyStates['D']) > 1){
+            velocidade = 0.7*3;
+        }else{
+            velocidade = 3;
+        }
+        if(keyStates['w'] || keyStates['W'] ){ posicao.y += velocidade; }
+        if(keyStates['s'] || keyStates['S'] ){ posicao.y -= velocidade; }
+        if(keyStates['a'] || keyStates['A'] ){ posicao.x -= velocidade; }
+        if(keyStates['d'] || keyStates['D'] ){ posicao.x += velocidade; }
     }
 
     void mira(int x, int y){
         y = -y + 350;
         x =  x - 350;
         if(x != 0 && y !=0){
-            inclinacao = -(GLfloat)atan2(x,y)/3.1415*180.0;
+            inclinacao = -(GLfloat)atan2(x-posicao.x,y-posicao.y)/3.1415*180.0;
         } 
     }
 
@@ -141,6 +102,7 @@ public:
 
         int rand_offset = (rand() % 5  ) - 2.5;
         glPushMatrix();
+        glTranslatef(posicao.x, posicao.y, 0);
         glRotatef(inclinacao, 0, 0, 1);
 
         if (tempo%8 < 4 && senta_o_dedo){
@@ -148,20 +110,20 @@ public:
             glRotatef(rand_offset, 0, 0, 1);
             glBegin(GL_POLYGON);
             glColor3f(1, 1, 0);
-            glVertex2f(posicao.x - 1 + 8, posicao.y + 0);
-            glVertex2f(posicao.x - 1 + 8, posicao.y + 400);
-            glVertex2f(posicao.x + 1 + 8, posicao.y + 400);
-            glVertex2f(posicao.x + 1 + 8, posicao.y + 0);
+            glVertex2f(0 - 1 + 8, 0 + 0);
+            glVertex2f(0 - 1 + 8, 0 + 800);
+            glVertex2f(0 + 1 + 8, 0 + 800);
+            glVertex2f(0 + 1 + 8, 0 + 0);
             glEnd();
             glPopMatrix();
         }
         
         glBegin(GL_POLYGON);
         glColor3f(0, 0, 0);
-        glVertex2f(posicao.x - 1.5 + 8, posicao.y + 0);
-        glVertex2f(posicao.x - 1.5 + 8, posicao.y + 30);
-        glVertex2f(posicao.x + 1.5 + 8, posicao.y + 30);
-        glVertex2f(posicao.x + 1.5 + 8, posicao.y + 0);
+        glVertex2f(0 - 1.5 + 8, 0 + 0);
+        glVertex2f(0 - 1.5 + 8, 0 + 30);
+        glVertex2f(0 + 1.5 + 8, 0 + 30);
+        glVertex2f(0 + 1.5 + 8, 0 + 0);
         glEnd();
 
         glBegin(GL_POLYGON);
@@ -170,7 +132,7 @@ public:
             float theta = 2.0f * 3.1415926f * float(i) / float(num_segmentos);
             float cx = raio*2   * cosf(theta);
             float cy = raio*1.3 * sinf(theta);
-            glVertex2f(cx + posicao.x, cy + posicao.y);
+            glVertex2f(cx + 0, cy + 0);
         }
         glEnd();
 
@@ -180,7 +142,36 @@ public:
             float theta = 2.0f * 3.1415926f * float(i) / float(num_segmentos);
             float cx = raio * cosf(theta);
             float cy = raio * sinf(theta);
-            glVertex2f(cx + posicao.x, cy + (posicao.y-3));
+            glVertex2f(cx + 0, cy + (0-3));
+        }
+        glEnd();
+        glPopMatrix();
+    }
+};
+
+class Mira {
+public:
+    Coordenada posicao;
+
+    void render(){
+        glPushMatrix();
+        glTranslatef(posicao.x, posicao.y, 0);
+        glBegin(GL_LINE_LOOP);
+        glColor3f(0.3, 0, 0);
+        for(int i = 0; i < 30; i++){
+            float theta = 2.0f * 3.1415926f * float(i) / float(30);
+            float cx = 5 * cosf(theta);
+            float cy = 5 * sinf(theta);
+            glVertex2f(cx + 0, cy + 0);
+        }
+        glEnd();
+        glBegin(GL_LINE_LOOP);
+        glColor3f(0.3, 0, 0);
+        for(int i = 0; i < 30; i++){
+            float theta = 2.0f * 3.1415926f * float(i) / float(30);
+            float cx = 2 * cosf(theta);
+            float cy = 2 * sinf(theta);
+            glVertex2f(cx + 0, cy + 0);
         }
         glEnd();
         glPopMatrix();
@@ -201,6 +192,8 @@ Texto  texto("(0,0)", PRETO);
 
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 
+Mira mira;
+
 void Render(void){
     // REDERIZAÇÃO
     glMatrixMode(GL_MODELVIEW);
@@ -208,6 +201,7 @@ void Render(void){
     glClear(GL_COLOR_BUFFER_BIT);
     player.render();
     texto.render();
+    mira.render();
     glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glutSwapBuffers();
     glutPostRedisplay();
@@ -226,6 +220,7 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h){
 
 void Atualizar(){
     tempo++;
+    player.caminha();
     if (tempo == 100)
         tempo = 0;
 }
@@ -243,37 +238,6 @@ void volta (string dir){
     // }
 }
 
-void teclado(unsigned char tecla, int x, int y){
-    switch(tecla){
-        case 'w':
-            // player.caminha("UP", 3);
-            // volta("DOWN");
-        break;
-        case 's':
-            // player.caminha("DOWN", 3);
-            // volta("UP");
-        break;
-        case 'a':
-            // player.caminha("LEFT", 3);
-            // volta("RIGHT");
-        break;
-        case 'd':
-            // player.caminha("RIGHT", 3);
-            // volta("LEFT");
-        break;
-    }
-    glutPostRedisplay();
-}
-
-void cursormouse(int x, int y){
-    player.mira(x, y);
-    y = -y + 350;
-    x = x - 350;
-    char temp[100];
-    sprintf(temp, " (%d, %d)  %f", x, y, player.inclinacao);
-    texto.set_texto(temp);
-}
-
 void mouseClicks(int button, int state, int x, int y){
     player.mira(x, y);
     if (state == GLUT_DOWN)
@@ -282,8 +246,30 @@ void mouseClicks(int button, int state, int x, int y){
         senta_o_dedo = false;
 }
 
-void shooting(int x, int y){
+
+void keyDown(unsigned char tecla, int x, int y){
+    keyStates[tecla] = 1;
+}
+
+void keyUp(unsigned char tecla, int x, int y){
+    keyStates[tecla] = 0;
+}
+
+void cursormouse(int x, int y){
+    mira.posicao.x=x - 350;
+    mira.posicao.y=-y + 350;
     player.mira(x, y);
+    y = -y + 350;
+    x = x - 350;
+    char temp[100];
+    sprintf(temp, " (%d, %d)  %f", x, y, player.inclinacao);
+    texto.set_texto(temp);
+}
+
+void atirando(int x, int y){
+    player.mira(x, y);
+    mira.posicao.x=x - 350;
+    mira.posicao.y=-y + 350;
 }
 
 int main(int argc, char** argv) {
@@ -295,11 +281,16 @@ int main(int argc, char** argv) {
     glutCreateWindow("Exemplo Aula");        // Cria janela com titulo
     glutDisplayFunc(Render);                 // Seta função de renderização
     glutReshapeFunc(AlteraTamanhoJanela);
-    glutKeyboardFunc(teclado);
+    glutKeyboardFunc(keyDown);
+    glutKeyboardUpFunc(keyUp);
+
+    glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
+    glutSetCursor(GLUT_CURSOR_NONE);
+
     // glutSpecialFunc(TeclasEspeciais); 
     glutPassiveMotionFunc(cursormouse);
     glutMouseFunc(mouseClicks);
-    glutMotionFunc(shooting);           
+    glutMotionFunc(atirando);           
     glutIdleFunc(Atualizar);                 // Seta função de atualização
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);    // Inicializar a cor de fundo da tela
     glutMainLoop();                          // Chama a máquina de estados do OpenGL e processa todas as mensagens
