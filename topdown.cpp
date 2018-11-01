@@ -1,4 +1,4 @@
-// g++ -std=c++11 texture.cpp -lglut -lGLU -lGL -lrt  -lSOIL -lGLEW -lsfml-window -lsfml-system
+// g++ -std=c++11 topdown.cpp -lglut -lGLU -lGL -lpng
 
 #include <GL/glut.h>  
 #include <stdio.h>
@@ -8,12 +8,17 @@
 #include <math.h>
 #include <time.h>
 #include <png.h>
- 
-
 using namespace std;
 
+GLfloat win = 250.0f;
+int tempo = 0;
+bool senta_o_dedo = false;
+int* keyStates = new int[256];
+GLubyte *textureImage[10];
+
+
 bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) {
-    png_structp png_ptr;
+     png_structp png_ptr;
     png_infop info_ptr;
     unsigned int sig_read = 0;
     int color_type, interlace_type;
@@ -22,12 +27,27 @@ bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, 
     if ((fp = fopen(name, "rb")) == NULL)
         return false;
  
-    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    /* Create and initialize the png_struct
+     * with the desired error handler
+     * functions.  If you want to use the
+     * default stderr and longjump method,
+     * you can supply NULL for the last
+     * three parameters.  We also supply the
+     * the compiler header file version, so
+     * that we know if the application
+     * was compiled with a compatible version
+     * of the library.  REQUIRED
+     */
+    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
+                                     NULL, NULL, NULL);
+ 
     if (png_ptr == NULL) {
         fclose(fp);
         return false;
     }
  
+    /* Allocate/initialize the memory
+     * for image information.  REQUIRED. */
     info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == NULL) {
         fclose(fp);
@@ -35,13 +55,52 @@ bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, 
         return false;
     }
  
+    /* Set error handling if you are
+     * using the setjmp/longjmp method
+     * (this is the normal method of
+     * doing things with libpng).
+     * REQUIRED unless you  set up
+     * your own error handlers in
+     * the png_create_read_struct()
+     * earlier.
+     */
     if (setjmp(png_jmpbuf(png_ptr))) {
+        /* Free all of the memory associated
+         * with the png_ptr and info_ptr */
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         fclose(fp);
+        /* If we get here, we had a
+         * problem reading the file */
         return false;
     }
+ 
+    /* Set up the output control if
+     * you are using standard C streams */
     png_init_io(png_ptr, fp);
+ 
+    /* If we have already
+     * read some of the signature */
     png_set_sig_bytes(png_ptr, sig_read);
+ 
+    /*
+     * If you have enough memory to read
+     * in the entire image at once, and
+     * you need to specify only
+     * transforms that can be controlled
+     * with one of the PNG_TRANSFORM_*
+     * bits (this presently excludes
+     * dithering, filling, setting
+     * background, and doing gamma
+     * adjustment), then you can read the
+     * entire image (including pixels)
+     * into the info structure with this
+     * call
+     *
+     * PNG_TRANSFORM_STRIP_16 |
+     * PNG_TRANSFORM_PACKING  forces 8 bit
+     * PNG_TRANSFORM_EXPAND forces to
+     *  expand a palette into RGB
+     */
     png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
  
     png_uint_32 width, height;
@@ -57,20 +116,22 @@ bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, 
     png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
  
     for (int i = 0; i < outHeight; i++) {
+        // note that png is ordered top to
+        // bottom, but OpenGL expect it bottom to top
+        // so the order or swapped
         memcpy(*outData+(row_bytes * (outHeight-1-i)), row_pointers[i], row_bytes);
     }
  
+    /* Clean up after the read,
+     * and free any memory allocated */
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+ 
+    /* Close the file */
     fclose(fp);
+ 
+    /* That's it */
     return true;
 }
-
-GLfloat win = 250.0f;
-int tempo = 0;
-bool senta_o_dedo = false;
-int* keyStates = new int[256];
-GLubyte *textureImage;
-
 
 class Coordenada {
 public:
@@ -109,9 +170,9 @@ public:
     }
 
     void render(){
-        glColor3f(cor.r, cor.g, cor.b);
         glPushMatrix();
-        glRasterPos2f(-win, win-(win*0.08));
+        glColor3f(cor.r, cor.g, cor.b);
+        glRasterPos2f(1,1);
         for (int i = 0; i < sizeof conteudo_texto; ++i){
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, conteudo_texto[i]);
         }
@@ -152,12 +213,12 @@ public:
     } 
 
     void caminha(){
-        int velocidade;
+        float velocidade;
         if ((keyStates['w'] + keyStates['s'] + keyStates['a'] + keyStates['d']) > 1 ||
             (keyStates['W'] + keyStates['S'] + keyStates['A'] + keyStates['D']) > 1){
-            velocidade = 0.7*3;
+            velocidade = 0.7*0.01;
         }else{
-            velocidade = 3;
+            velocidade = 0.01;
         }
         if(keyStates['w'] || keyStates['W'] ){ posicao.y += velocidade; }
         if(keyStates['s'] || keyStates['S'] ){ posicao.y -= velocidade; }
@@ -165,62 +226,44 @@ public:
         if(keyStates['d'] || keyStates['D'] ){ posicao.x += velocidade; }
     }
 
-    void mira(int x, int y){
+    void rotate(int x, int y){
         y = -y + 350;
         x =  x - 350;
         if(x != 0 && y !=0){
-            inclinacao = -(GLfloat)atan2(x-posicao.x,y-posicao.y)/3.1415*180.0;
+            inclinacao = (-(GLfloat)atan2(x-posicao.x,y-posicao.y)/3.1415*180.0)+90;
         } 
     }
 
     void render(){
-
         int rand_offset = (rand() % 5  ) - 2.5;
         glPushMatrix();
         glTranslatef(posicao.x, posicao.y, 0);
         glRotatef(inclinacao, 0, 0, 1);
-
-        if (tempo%8 < 4 && senta_o_dedo){
+        if (tempo%8 < 3 && senta_o_dedo){
             glPushMatrix();
-            glRotatef(rand_offset, 0, 0, 1);
+            glRotatef(rand_offset-90, 0, 0, 1);
             glBegin(GL_POLYGON);
-            glColor3f(1, 1, 0);
-            glVertex2f(0 - 1 + 8, 0 + 0);
-            glVertex2f(0 - 1 + 8, 0 + 800);
-            glVertex2f(0 + 1 + 8, 0 + 800);
-            glVertex2f(0 + 1 + 8, 0 + 0);
+            glColor4f(1, 1, 0, 1);
+            glVertex2f( +0.8, -0.0);
+            glVertex2f( +0.8, +100);
+            glVertex2f( +1.0, +100);
+            glVertex2f( +1.0, -0.0);
             glEnd();
             glPopMatrix();
         }
-        
-        glBegin(GL_POLYGON);
-        glColor3f(0, 0, 0);
-        glVertex2f(0 - 1.5 + 8, 0 + 0);
-        glVertex2f(0 - 1.5 + 8, 0 + 30);
-        glVertex2f(0 + 1.5 + 8, 0 + 30);
-        glVertex2f(0 + 1.5 + 8, 0 + 0);
-        glEnd();
-
-        glBegin(GL_POLYGON);
-        glColor3f(0, 0.5, 0);
-        for(int i = 0; i < num_segmentos; i++){
-            float theta = 2.0f * 3.1415926f * float(i) / float(num_segmentos);
-            float cx = raio*2   * cosf(theta);
-            float cy = raio*1.3 * sinf(theta);
-            glVertex2f(cx + 0, cy + 0);
-        }
-        glEnd();
-
-        glBegin(GL_POLYGON);
-        glColor3f(cor.r, cor.g, cor.b);
-        for(int i = 0; i < num_segmentos; i++){
-            float theta = 2.0f * 3.1415926f * float(i) / float(num_segmentos);
-            float cx = raio * cosf(theta);
-            float cy = raio * sinf(theta);
-            glVertex2f(cx + 0, cy + (0-3));
-        }
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0, 0.0);
+        glVertex2f( -2.0,-2.0);
+        glTexCoord2f(0.0, 1.0);
+        glVertex2f( -2.0, 2.0);
+        glTexCoord2f(1.0, 1.0);
+        glVertex2f(  2.0, 2.0);
+        glTexCoord2f(1.0, 0.0);
+        glVertex2f(  2.0,-2.0);
         glEnd();
         glPopMatrix();
+
+
     }
 };
 
@@ -232,11 +275,11 @@ public:
         glPushMatrix();
         glTranslatef(posicao.x, posicao.y, 0);
         glBegin(GL_LINE_LOOP);
-        glColor3f(0.3, 0, 0);
+        glColor3f(0, 0, 0);
         for(int i = 0; i < 30; i++){
             float theta = 2.0f * 3.1415926f * float(i) / float(30);
-            float cx = 5 * cosf(theta);
-            float cy = 5 * sinf(theta);
+            float cx = 0.5 * cosf(theta);
+            float cy = 0.5 * sinf(theta);
             glVertex2f(cx + 0, cy + 0);
         }
         glEnd();
@@ -244,16 +287,14 @@ public:
         glColor3f(0.3, 0, 0);
         for(int i = 0; i < 30; i++){
             float theta = 2.0f * 3.1415926f * float(i) / float(30);
-            float cx = 2 * cosf(theta);
-            float cy = 2 * sinf(theta);
+            float cx = 0.1 * cosf(theta);
+            float cy = 0.1 * sinf(theta);
             glVertex2f(cx + 0, cy + 0);
         }
         glEnd();
         glPopMatrix();
     }
 };
-
-
 
 // INICIALIZAÇÃO DOS OBJETOS E VARIÁVEIS
 Cor    CINZA(0.5,0.5,0.5);
@@ -263,6 +304,7 @@ Cor     AZUL(0.0,0.0,1.0);
 Cor  AMARELO(1.0,1.0,0.0);
 Cor    PRETO(0.0,0.0,0.0);
 Cor  LARANJA(1.0,0.6,0.3);
+Cor  BRANCO( 1.0,1.0,1.0);
 
 //      Arma(  num, damage, rate, reload, cap, accuracy  )
 Arma    faca(  1,   20,     1,    0,       1,  0);
@@ -272,61 +314,40 @@ Arma    ak47(  1,   40 ,    8,    3,      25,  3);
 
 Texto  texto("(0,0)", PRETO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
-
 Mira mira;
 
 void Render(void){
     // REDERIZAÇÃO
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();            
-    glClear(GL_COLOR_BUFFER_BIT);
+    glLoadIdentity();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glTranslatef(0, 0, -35);
+    glRotatef(0, 1, 1, 1);
+
+    // mira.render();
     player.render();
-    texto.render();
-    mira.render();
+
+    // texto.render();
+
     glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glutSwapBuffers();
     glutPostRedisplay();
 
 }
 
-
-// Função callback chamada quando o tamanho da janela é alterado 
-void AlteraTamanhoJanela(GLsizei w, GLsizei h){ 
-    glViewport(0, 0, w, h); // Especifica as dimensões da Viewport
-    // Inicializa o sistema de coordenadas
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D (-win, win, -win, win);
-}
-
-void Atualizar(){
+void Refresh(){
     tempo++;
     player.caminha();
     if (tempo == 100)
         tempo = 0;
 }
 
-
-
-void volta (string dir){
-    // if(
-    //     player.colide(obstaculo1) || 
-    //     player.colide(obstaculo2)
-    // ){
-    //     player.caminha(dir);
-    //     player.caminha(dir);
-    //     player.caminha(dir);
-    // }
-}
-
 void mouseClicks(int button, int state, int x, int y){
-    player.mira(x, y);
+    player.rotate(x, y);
     if (state == GLUT_DOWN)
         senta_o_dedo = true;
     else
         senta_o_dedo = false;
 }
-
 
 void keyDown(unsigned char tecla, int x, int y){
     keyStates[tecla] = 1;
@@ -337,9 +358,9 @@ void keyUp(unsigned char tecla, int x, int y){
 }
 
 void cursormouse(int x, int y){
-    mira.posicao.x=x - 350;
-    mira.posicao.y=-y + 350;
-    player.mira(x, y);
+    mira.posicao.x=x;
+    mira.posicao.y=y;
+    player.rotate(x, y);
     y = -y + 350;
     x = x - 350;
     char temp[100];
@@ -348,72 +369,68 @@ void cursormouse(int x, int y){
 }
 
 void atirando(int x, int y){
-    player.mira(x, y);
-    mira.posicao.x=x - 350;
-    mira.posicao.y=-y + 350;
+    player.rotate(x, y);
+    mira.posicao.x=x;
+    mira.posicao.y=y;
 }
 
 void loadTextures(){
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glEnable(GL_DEPTH_TEST);
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    // glEnable(GL_DEPTH_TEST);
     // The following two lines enable semi transparent
-    glEnable(GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glEnable(GL_BLEND);
+    // glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
  
     int width, height;
     bool hasAlpha;
-    char filename[] = "sample.png";
-    bool success = loadPngImage(filename, width, height, hasAlpha, &textureImage);
-    if (!success) {
-        std::cout << "Unable to load png file" << std::endl;
-        return;
-    }
+    char idle_shotgun_0[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
+    bool success = loadPngImage(idle_shotgun_0, width, height, hasAlpha, &textureImage[0]);
+    
     std::cout << "Image loaded " << width << " " << height << " alpha " << hasAlpha << std::endl;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
-                 height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-                 textureImage);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width, height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, textureImage[0]);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_FLAT);
 }
 
-void initKeyboard(){
-    glutKeyboardFunc(keyDown);
-    glutKeyboardUpFunc(keyUp);
-    glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
-    glutSetCursor(GLUT_CURSOR_NONE);
+void myReshape(GLsizei w, GLsizei h){ 
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60.0, 1.0 * (GLfloat) w / (GLfloat) h, 1.0, 60.0);
+    glMatrixMode(GL_MODELVIEW);
 }
 
-void initWindow(){
-    glutInitDisplayMode(GLUT_DOUBLE);        // Habilita double buffer(geralmente utilizado com animação) mas pode ser SINGLE também
-    glutInitWindowSize(700, 700);            // Inicializa tamanho da janela
-    glutInitWindowPosition(100,10);          // Posição inicial da janela na tela    
-    glutCreateWindow("Exemplo Aula");        // Cria janela com titulo
-    glutReshapeFunc(AlteraTamanhoJanela);    // Altera tamanho da janela
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);    // Inicializar a cor de fundo da tela
+void initKeyboard(){
+    glutKeyboardFunc(keyDown);                  // Callback ao pressionar tecla
+    glutKeyboardUpFunc(keyUp);                  // Callback ao soltar tecla
+    glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);      // Desativa reperição de tecla
 }
 
 void initMouse(){
-    glutPassiveMotionFunc(cursormouse);      // Callback do cursor movendo 
-    glutMouseFunc(mouseClicks);              // Callback do click
-    glutMotionFunc(atirando);                // Callback do drag
-    // glutSpecialFunc(TeclasEspeciais); 
+    glutPassiveMotionFunc(cursormouse);         // Callback do cursor movendo 
+    glutMouseFunc(mouseClicks);                 // Callback do click
+    glutMotionFunc(atirando);                   // Callback do drag
+    glutSetCursor(GLUT_CURSOR_NONE);            // Esconde cursor
 }
 
 int main(int argc, char** argv) {
     srand(time(NULL));
-    glutInit(&argc, argv);                   // Inicializa GLUT
-    initWindow();                            // Inicializa janela
-    initKeyboard();                          // Inicializa teclado
-    initMouse();                             // Inicializa mouse
-    // loadTextures();                          // Carrega texturas
-
-    glutDisplayFunc(Render);                 // Seta função de renderização
-    glutIdleFunc(Atualizar);                 // Seta função de atualização
-    glutMainLoop();                          // Chama a máquina de estados do OpenGL e processa todas as mensagens
-    return 0;                                // nunca retorna
+    glutInit(&argc, argv);                      // Inicializa GLUT
+    glutInitWindowSize(1300, 700);               // Inicializa tamanho da janela
+    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);
+    glutCreateWindow("PNG texture");
+    glutReshapeFunc(myReshape);
+    glutDisplayFunc(Render);
+    glutIdleFunc(Refresh);                      // Seta função de atualização
+    loadTextures();
+    initKeyboard();                             // Inicializa teclado
+    initMouse();                                // Inicializa mouse
+    std::cout << "Use mouse drag to rotate." << std::endl;
+    glutMainLoop();
+    return 0;
 }

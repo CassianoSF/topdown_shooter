@@ -1,3 +1,6 @@
+// g++ -std=c++11 topdown.cpp -lglut -lGLU -lGL -lpng
+
+
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -136,7 +139,7 @@ void init(void) {
  
     int width, height;
     bool hasAlpha;
-    char filename[] = "sample.png";
+    char filename[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
     bool success = loadPngImage(filename, width, height, hasAlpha, &textureImage);
     if (!success) {
         std::cout << "Unable to load png file" << std::endl;
@@ -183,28 +186,12 @@ void myReshape(int w, int h) {
     gluPerspective(60.0, 1.0 * (GLfloat) w / (GLfloat) h, 1.0, 30.0);
     glMatrixMode(GL_MODELVIEW);
 }
+
  
-void mousePassive(int x, int y){
-    mouseX = x;
-    mouseY = y;
-}
- 
-void mouseMotion(int x, int y){
-    const float SPEED = 2;
- 
-    rotateX += (mouseX-x)/SPEED;
-    rotateY += (mouseY-y)/SPEED;
-    mousePassive(x, y);
-    glutPostRedisplay();
-}
- 
-int
-main(int argc, char** argv) {
+int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);
     glutCreateWindow("PNG texture");
-    glutMotionFunc(mouseMotion);
-    glutPassiveMotionFunc(mousePassive);
     init();
     glutReshapeFunc(myReshape);
     glutDisplayFunc(display);
