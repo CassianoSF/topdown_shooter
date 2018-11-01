@@ -1,24 +1,84 @@
+// g++ -std=c++11 texture.cpp -lglut -lGLU -lGL -lrt  -lSOIL -lGLEW -lsfml-window -lsfml-system
+
 #include <GL/glut.h>  
 #include <stdio.h>
-#include <iostream>
 #include <stdlib.h> 
+#include <iostream>
 #include <string>
 #include <math.h>
 #include <time.h>
+#include <png.h>
+ 
 
 using namespace std;
 
-
+bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) {
+    png_structp png_ptr;
+    png_infop info_ptr;
+    unsigned int sig_read = 0;
+    int color_type, interlace_type;
+    FILE *fp;
+ 
+    if ((fp = fopen(name, "rb")) == NULL)
+        return false;
+ 
+    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+        fclose(fp);
+        return false;
+    }
+ 
+    info_ptr = png_create_info_struct(png_ptr);
+    if (info_ptr == NULL) {
+        fclose(fp);
+        png_destroy_read_struct(&png_ptr, NULL, NULL);
+        return false;
+    }
+ 
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        fclose(fp);
+        return false;
+    }
+    png_init_io(png_ptr, fp);
+    png_set_sig_bytes(png_ptr, sig_read);
+    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
+ 
+    png_uint_32 width, height;
+    int bit_depth;
+    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+                 &interlace_type, NULL, NULL);
+    outWidth = width;
+    outHeight = height;
+ 
+    unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
+    *outData = (unsigned char*) malloc(row_bytes * outHeight);
+ 
+    png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
+ 
+    for (int i = 0; i < outHeight; i++) {
+        memcpy(*outData+(row_bytes * (outHeight-1-i)), row_pointers[i], row_bytes);
+    }
+ 
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+    fclose(fp);
+    return true;
+}
 
 GLfloat win = 250.0f;
 int tempo = 0;
 bool senta_o_dedo = false;
 int* keyStates = new int[256];
+GLubyte *textureImage;
 
 
 class Coordenada {
 public:
     float x, y;
+    void set(float _x, float _y){
+        x=_x;
+        y=_y;
+    }
 };
 
 class Cor {
@@ -59,13 +119,27 @@ public:
     }
 };
 
+class Arma{
+public:
+    int num, damage, cap;
+    float rate, reload, accuracy;
+    Arma(int _damage, int _cap, int _num, float _rate, float _reload, float _accuracy){
+        num      =      _num;
+        damage   =   _damage;
+        rate     =     _rate;
+        reload   =   _reload;
+        cap      =      _cap;
+        accuracy = _accuracy;
+    }
+};
+
 class Player {
 public:
     Coordenada posicao;
     Cor cor;   
     int num_segmentos;
     float raio, inclinacao;
-    string caminhando;
+    string caminhando, arma;
 
     Player(float x, float y, float r, int seg, float angulo, Cor c){
         cor.set(c);
@@ -74,6 +148,7 @@ public:
         num_segmentos=seg;
         inclinacao = angulo;
         raio = r;
+        arma = 1;
     } 
 
     void caminha(){
@@ -179,6 +254,7 @@ public:
 };
 
 
+
 // INICIALIZAÇÃO DOS OBJETOS E VARIÁVEIS
 Cor    CINZA(0.5,0.5,0.5);
 Cor VERMELHO(1.0,0.0,0.0);
@@ -188,8 +264,13 @@ Cor  AMARELO(1.0,1.0,0.0);
 Cor    PRETO(0.0,0.0,0.0);
 Cor  LARANJA(1.0,0.6,0.3);
 
-Texto  texto("(0,0)", PRETO);
+//      Arma(  num, damage, rate, reload, cap, accuracy  )
+Arma    faca(  1,   20,     1,    0,       1,  0);
+Arma   glock(  1,   30,     3,    6,      11,  2);
+Arma    doze(  1,   100,    1,    8,       5,  6);
+Arma    ak47(  1,   40 ,    8,    3,      25,  3);
 
+Texto  texto("(0,0)", PRETO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 
 Mira mira;
@@ -272,27 +353,67 @@ void atirando(int x, int y){
     mira.posicao.y=-y + 350;
 }
 
-int main(int argc, char** argv) {
-    srand(time(NULL));
-    glutInit(&argc, argv);                   // Inicializa GLUT
+void loadTextures(){
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glEnable(GL_DEPTH_TEST);
+    // The following two lines enable semi transparent
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+ 
+    int width, height;
+    bool hasAlpha;
+    char filename[] = "sample.png";
+    bool success = loadPngImage(filename, width, height, hasAlpha, &textureImage);
+    if (!success) {
+        std::cout << "Unable to load png file" << std::endl;
+        return;
+    }
+    std::cout << "Image loaded " << width << " " << height << " alpha " << hasAlpha << std::endl;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
+                 height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+                 textureImage);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glEnable(GL_TEXTURE_2D);
+    glShadeModel(GL_FLAT);
+}
+
+void initKeyboard(){
+    glutKeyboardFunc(keyDown);
+    glutKeyboardUpFunc(keyUp);
+    glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
+    glutSetCursor(GLUT_CURSOR_NONE);
+}
+
+void initWindow(){
     glutInitDisplayMode(GLUT_DOUBLE);        // Habilita double buffer(geralmente utilizado com animação) mas pode ser SINGLE também
     glutInitWindowSize(700, 700);            // Inicializa tamanho da janela
     glutInitWindowPosition(100,10);          // Posição inicial da janela na tela    
     glutCreateWindow("Exemplo Aula");        // Cria janela com titulo
-    glutDisplayFunc(Render);                 // Seta função de renderização
-    glutReshapeFunc(AlteraTamanhoJanela);
-    glutKeyboardFunc(keyDown);
-    glutKeyboardUpFunc(keyUp);
-
-    glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
-    glutSetCursor(GLUT_CURSOR_NONE);
-
-    // glutSpecialFunc(TeclasEspeciais); 
-    glutPassiveMotionFunc(cursormouse);
-    glutMouseFunc(mouseClicks);
-    glutMotionFunc(atirando);           
-    glutIdleFunc(Atualizar);                 // Seta função de atualização
+    glutReshapeFunc(AlteraTamanhoJanela);    // Altera tamanho da janela
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);    // Inicializar a cor de fundo da tela
+}
+
+void initMouse(){
+    glutPassiveMotionFunc(cursormouse);      // Callback do cursor movendo 
+    glutMouseFunc(mouseClicks);              // Callback do click
+    glutMotionFunc(atirando);                // Callback do drag
+    // glutSpecialFunc(TeclasEspeciais); 
+}
+
+int main(int argc, char** argv) {
+    srand(time(NULL));
+    glutInit(&argc, argv);                   // Inicializa GLUT
+    initWindow();                            // Inicializa janela
+    initKeyboard();                          // Inicializa teclado
+    initMouse();                             // Inicializa mouse
+    // loadTextures();                          // Carrega texturas
+
+    glutDisplayFunc(Render);                 // Seta função de renderização
+    glutIdleFunc(Atualizar);                 // Seta função de atualização
     glutMainLoop();                          // Chama a máquina de estados do OpenGL e processa todas as mensagens
     return 0;                                // nunca retorna
 }
