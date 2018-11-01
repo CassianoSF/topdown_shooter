@@ -12,10 +12,10 @@ using namespace std;
 
 GLfloat win = 250.0f;
 int tempo = 0;
-bool senta_o_dedo = false;
 int* keyStates = new int[256];
-GLubyte *textureImage[10];
-
+GLubyte *idle_shotgun_0;
+int screen_w = 1300;
+int screen_h = 700;
 
 bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) {
      png_structp png_ptr;
@@ -23,84 +23,31 @@ bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, 
     unsigned int sig_read = 0;
     int color_type, interlace_type;
     FILE *fp;
- 
     if ((fp = fopen(name, "rb")) == NULL)
         return false;
  
-    /* Create and initialize the png_struct
-     * with the desired error handler
-     * functions.  If you want to use the
-     * default stderr and longjump method,
-     * you can supply NULL for the last
-     * three parameters.  We also supply the
-     * the compiler header file version, so
-     * that we know if the application
-     * was compiled with a compatible version
-     * of the library.  REQUIRED
-     */
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                      NULL, NULL, NULL);
- 
     if (png_ptr == NULL) {
         fclose(fp);
         return false;
     }
- 
-    /* Allocate/initialize the memory
-     * for image information.  REQUIRED. */
+
     info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == NULL) {
         fclose(fp);
         png_destroy_read_struct(&png_ptr, NULL, NULL);
         return false;
     }
- 
-    /* Set error handling if you are
-     * using the setjmp/longjmp method
-     * (this is the normal method of
-     * doing things with libpng).
-     * REQUIRED unless you  set up
-     * your own error handlers in
-     * the png_create_read_struct()
-     * earlier.
-     */
+
     if (setjmp(png_jmpbuf(png_ptr))) {
-        /* Free all of the memory associated
-         * with the png_ptr and info_ptr */
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         fclose(fp);
-        /* If we get here, we had a
-         * problem reading the file */
         return false;
     }
- 
-    /* Set up the output control if
-     * you are using standard C streams */
+
     png_init_io(png_ptr, fp);
- 
-    /* If we have already
-     * read some of the signature */
     png_set_sig_bytes(png_ptr, sig_read);
- 
-    /*
-     * If you have enough memory to read
-     * in the entire image at once, and
-     * you need to specify only
-     * transforms that can be controlled
-     * with one of the PNG_TRANSFORM_*
-     * bits (this presently excludes
-     * dithering, filling, setting
-     * background, and doing gamma
-     * adjustment), then you can read the
-     * entire image (including pixels)
-     * into the info structure with this
-     * call
-     *
-     * PNG_TRANSFORM_STRIP_16 |
-     * PNG_TRANSFORM_PACKING  forces 8 bit
-     * PNG_TRANSFORM_EXPAND forces to
-     *  expand a palette into RGB
-     */
     png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
  
     png_uint_32 width, height;
@@ -116,22 +63,27 @@ bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, 
     png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
  
     for (int i = 0; i < outHeight; i++) {
-        // note that png is ordered top to
-        // bottom, but OpenGL expect it bottom to top
-        // so the order or swapped
         memcpy(*outData+(row_bytes * (outHeight-1-i)), row_pointers[i], row_bytes);
     }
- 
-    /* Clean up after the read,
-     * and free any memory allocated */
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
- 
-    /* Close the file */
     fclose(fp);
- 
-    /* That's it */
     return true;
 }
+
+class Textura{
+public:
+    Textura(const char *pfilePath){
+      if(LoadFile(pfilePath)==ERROR)
+         return;
+      textureID=0;
+      glGenTextures(1, &textureID);
+      //More GL code...
+    }
+
+    ~Textura(){
+        textureID glDeleteTextures(1, &textureID);
+    }
+};
 
 class Coordenada {
 public:
@@ -196,16 +148,15 @@ public:
 
 class Player {
 public:
-    Coordenada posicao;
+    Coordenada pos;
     Cor cor;   
     int num_segmentos;
     float raio, inclinacao;
     string caminhando, arma;
-
+    bool shoot;
     Player(float x, float y, float r, int seg, float angulo, Cor c){
         cor.set(c);
-        posicao.x = x;
-        posicao.y = y;
+        pos.set(x, y);
         num_segmentos=seg;
         inclinacao = angulo;
         raio = r;
@@ -220,26 +171,26 @@ public:
         }else{
             velocidade = 0.01;
         }
-        if(keyStates['w'] || keyStates['W'] ){ posicao.y += velocidade; }
-        if(keyStates['s'] || keyStates['S'] ){ posicao.y -= velocidade; }
-        if(keyStates['a'] || keyStates['A'] ){ posicao.x -= velocidade; }
-        if(keyStates['d'] || keyStates['D'] ){ posicao.x += velocidade; }
+        if(keyStates['w'] || keyStates['W'] ){ pos.y += velocidade; }
+        if(keyStates['s'] || keyStates['S'] ){ pos.y -= velocidade; }
+        if(keyStates['a'] || keyStates['A'] ){ pos.x -= velocidade; }
+        if(keyStates['d'] || keyStates['D'] ){ pos.x += velocidade; }
     }
 
     void rotate(int x, int y){
         y = -y + 350;
         x =  x - 350;
         if(x != 0 && y !=0){
-            inclinacao = (-(GLfloat)atan2(x-posicao.x,y-posicao.y)/3.1415*180.0)+90;
+            inclinacao = (-(GLfloat)atan2(x-pos.x,y-pos.y)/3.1415*180.0)+90;
         } 
     }
 
     void render(){
         int rand_offset = (rand() % 5  ) - 2.5;
         glPushMatrix();
-        glTranslatef(posicao.x, posicao.y, 0);
+        glTranslatef(pos.x, pos.y, 0);
         glRotatef(inclinacao, 0, 0, 1);
-        if (tempo%8 < 3 && senta_o_dedo){
+        if (tempo%8 < 3 && shoot){
             glPushMatrix();
             glRotatef(rand_offset-90, 0, 0, 1);
             glBegin(GL_POLYGON);
@@ -269,11 +220,11 @@ public:
 
 class Mira {
 public:
-    Coordenada posicao;
+    Coordenada pos;
 
     void render(){
         glPushMatrix();
-        glTranslatef(posicao.x, posicao.y, 0);
+        glTranslatef(pos.x, pos.y, 0);
         glBegin(GL_LINE_LOOP);
         glColor3f(0, 0, 0);
         for(int i = 0; i < 30; i++){
@@ -316,11 +267,34 @@ Texto  texto("(0,0)", PRETO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 Mira mira;
 
-void Render(void){
+void initTextures(){
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glEnable(GL_DEPTH_TEST);
+    // The following two lines enable semi transparent
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+ 
+    int width, height;
+    bool hasAlpha;
+    char filename[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
+    bool success = loadPngImage(filename, width, height, hasAlpha, &idle_shotgun_0);
+    std::cout << "Image loaded " << width << " " << height << " alpha " << hasAlpha << std::endl;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width, height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, idle_shotgun_0);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glEnable(GL_TEXTURE_2D);
+    glShadeModel(GL_FLAT);
+}
+
+void myDisplay(void){
     // REDERIZAÇÃO
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glTranslatef(0, 0, -35);
+    // glTranslatef(-player.pos.x, -player.pos.y, -35);
+    glTranslatef(-player.pos.x, -player.pos.y, -35);
     glRotatef(0, 1, 1, 1);
 
     // mira.render();
@@ -334,19 +308,16 @@ void Render(void){
 
 }
 
-void Refresh(){
+void myIdle(){
     tempo++;
     player.caminha();
-    if (tempo == 100)
+    if (tempo == 1000)
         tempo = 0;
 }
 
 void mouseClicks(int button, int state, int x, int y){
     player.rotate(x, y);
-    if (state == GLUT_DOWN)
-        senta_o_dedo = true;
-    else
-        senta_o_dedo = false;
+    player.shoot = state == GLUT_DOWN;
 }
 
 void keyDown(unsigned char tecla, int x, int y){
@@ -358,11 +329,8 @@ void keyUp(unsigned char tecla, int x, int y){
 }
 
 void cursormouse(int x, int y){
-    mira.posicao.x=x;
-    mira.posicao.y=y;
+    mira.pos.set(x, y);
     player.rotate(x, y);
-    y = -y + 350;
-    x = x - 350;
     char temp[100];
     sprintf(temp, " (%d, %d)  %f", x, y, player.inclinacao);
     texto.set_texto(temp);
@@ -370,39 +338,21 @@ void cursormouse(int x, int y){
 
 void atirando(int x, int y){
     player.rotate(x, y);
-    mira.posicao.x=x;
-    mira.posicao.y=y;
-}
-
-void loadTextures(){
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    // glEnable(GL_DEPTH_TEST);
-    // The following two lines enable semi transparent
-    // glEnable(GL_BLEND);
-    // glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
- 
-    int width, height;
-    bool hasAlpha;
-    char idle_shotgun_0[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
-    bool success = loadPngImage(idle_shotgun_0, width, height, hasAlpha, &textureImage[0]);
-    
-    std::cout << "Image loaded " << width << " " << height << " alpha " << hasAlpha << std::endl;
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width, height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, textureImage[0]);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glEnable(GL_TEXTURE_2D);
-    glShadeModel(GL_FLAT);
+    mira.pos.set(x, y);
 }
 
 void myReshape(GLsizei w, GLsizei h){ 
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, screen_w, screen_h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60.0, 1.0 * (GLfloat) w / (GLfloat) h, 1.0, 60.0);
     glMatrixMode(GL_MODELVIEW);
+}
+
+void initCallbacks(){
+    glutReshapeFunc(myReshape);
+    glutDisplayFunc(myDisplay);
+    glutIdleFunc(myIdle);                      // Seta função de atualização
 }
 
 void initKeyboard(){
@@ -420,17 +370,14 @@ void initMouse(){
 
 int main(int argc, char** argv) {
     srand(time(NULL));
-    glutInit(&argc, argv);                      // Inicializa GLUT
-    glutInitWindowSize(1300, 700);               // Inicializa tamanho da janela
-    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);
-    glutCreateWindow("PNG texture");
-    glutReshapeFunc(myReshape);
-    glutDisplayFunc(Render);
-    glutIdleFunc(Refresh);                      // Seta função de atualização
-    loadTextures();
-    initKeyboard();                             // Inicializa teclado
-    initMouse();                                // Inicializa mouse
-    std::cout << "Use mouse drag to rotate." << std::endl;
-    glutMainLoop();
-    return 0;
+    glutInit(&argc, argv);                       // Inicializa GLUT
+    glutInitWindowSize(screen_w, screen_h);      // Inicializa tamanho da janela
+    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);  // Inicializa o display mode
+    glutCreateWindow("PNG texture");             // Inicializa a janaela
+    initCallbacks();                             // Inicializa callbacks
+    initTextures();                              // Inicializa texturas
+    initKeyboard();                              // Inicializa teclado
+    initMouse();                                 // Inicializa mouse
+    glutMainLoop();                              // Main loop
+    return 0;                                    // Nunca retorna
 }
