@@ -8,69 +8,185 @@
 #include <math.h>
 #include <time.h>
 #include <png.h>
+#include <GL/gl.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+
+#define GLFW_INCLUDE_ES2
+#include <GLFW/glfw3.h>
+
 using namespace std;
 
-GLfloat win = 250.0f;
 int tempo = 0;
 int* keyStates = new int[256];
-GLubyte *idle_shotgun_0;
+static GLuint idle_shotgun_0;
+static GLuint idle_shotgun_1;
 int screen_w = 700;
 int screen_h = 700;
 int rand_offset;
 GLuint textureID;
 
-bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) {
-     png_structp png_ptr;
-    png_infop info_ptr;
-    unsigned int sig_read = 0;
-    int color_type, interlace_type;
-    FILE *fp;
-    if ((fp = fopen(name, "rb")) == NULL)
-        return false;
- 
-    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                     NULL, NULL, NULL);
-    if (png_ptr == NULL) {
-        fclose(fp);
-        return false;
+
+
+GLuint png_texture_load(const char * file_name, int * width, int * height)
+{
+    // This function was originally written by David Grayson for
+    // https://github.com/DavidEGrayson/ahrs-visualizer
+
+    png_byte header[8];
+
+    FILE *fp = fopen(file_name, "rb");
+    if (fp == 0)
+    {
+        perror(file_name);
+        return 0;
     }
 
-    info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == NULL) {
+    // read the header
+    fread(header, 1, 8, fp);
+
+    if (png_sig_cmp(header, 0, 8))
+    {
+        fprintf(stderr, "error: %s is not a PNG.\n", file_name);
         fclose(fp);
-        png_destroy_read_struct(&png_ptr, NULL, NULL);
-        return false;
+        return 0;
     }
 
+    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png_ptr)
+    {
+        fprintf(stderr, "error: png_create_read_struct returned 0.\n");
+        fclose(fp);
+        return 0;
+    }
+
+    // create png info struct
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr)
+    {
+        fprintf(stderr, "error: png_create_info_struct returned 0.\n");
+        png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+        fclose(fp);
+        return 0;
+    }
+
+    // create png info struct
+    png_infop end_info = png_create_info_struct(png_ptr);
+    if (!end_info)
+    {
+        fprintf(stderr, "error: png_create_info_struct returned 0.\n");
+        png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+        fclose(fp);
+        return 0;
+    }
+
+    // the code in this if statement gets called if libpng encounters an error
     if (setjmp(png_jmpbuf(png_ptr))) {
-        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        fprintf(stderr, "error from libpng\n");
+        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
         fclose(fp);
-        return false;
+        return 0;
     }
 
+    // init png reading
     png_init_io(png_ptr, fp);
-    png_set_sig_bytes(png_ptr, sig_read);
-    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
- 
-    png_uint_32 width, height;
-    int bit_depth;
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-                 &interlace_type, NULL, NULL);
-    outWidth = width;
-    outHeight = height;
- 
-    unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
-    *outData = (unsigned char*) malloc(row_bytes * outHeight);
- 
-    png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
- 
-    for (int i = 0; i < outHeight; i++) {
-        memcpy(*outData+(row_bytes * (outHeight-1-i)), row_pointers[i], row_bytes);
+
+    // let libpng know you already read the first 8 bytes
+    png_set_sig_bytes(png_ptr, 8);
+
+    // read all the info up to the image data
+    png_read_info(png_ptr, info_ptr);
+
+    // variables to pass to get info
+    int bit_depth, color_type;
+    png_uint_32 temp_width, temp_height;
+
+    // get info about png
+    png_get_IHDR(png_ptr, info_ptr, &temp_width, &temp_height, &bit_depth, &color_type,
+        NULL, NULL, NULL);
+
+    if (width){ *width = temp_width; }
+    if (height){ *height = temp_height; }
+
+    //printf("%s: %lux%lu %d\n", file_name, temp_width, temp_height, color_type);
+
+    if (bit_depth != 8)
+    {
+        fprintf(stderr, "%s: Unsupported bit depth %d.  Must be 8.\n", file_name, bit_depth);
+        return 0;
     }
-    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+
+    GLint format;
+    switch(color_type)
+    {
+    case PNG_COLOR_TYPE_RGB:
+        format = GL_RGB;
+        break;
+    case PNG_COLOR_TYPE_RGB_ALPHA:
+        format = GL_RGBA;
+        break;
+    default:
+        fprintf(stderr, "%s: Unknown libpng color type %d.\n", file_name, color_type);
+        return 0;
+    }
+
+    // Update the png info struct.
+    png_read_update_info(png_ptr, info_ptr);
+
+    // Row size in bytes.
+    int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+
+    // glTexImage2d requires rows to be 4-byte aligned
+    rowbytes += 3 - ((rowbytes-1) % 4);
+
+    // Allocate the image_data as a big block, to be given to opengl
+    png_byte * image_data = (png_byte *)malloc(rowbytes * temp_height * sizeof(png_byte)+15);
+    if (image_data == NULL)
+    {
+        fprintf(stderr, "error: could not allocate memory for PNG image data\n");
+        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+        fclose(fp);
+        return 0;
+    }
+
+    // row_pointers is for pointing to image_data for reading the png with libpng
+    png_byte ** row_pointers = (png_byte **)malloc(temp_height * sizeof(png_byte *));
+    if (row_pointers == NULL)
+    {
+        fprintf(stderr, "error: could not allocate memory for PNG row pointers\n");
+        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+        free(image_data);
+        fclose(fp);
+        return 0;
+    }
+
+    // set the individual row_pointers to point at the correct offsets of image_data
+    for (unsigned int i = 0; i < temp_height; i++)
+    {
+        row_pointers[temp_height - 1 - i] = image_data + i * rowbytes;
+    }
+
+    // read the png into image_data through row_pointers
+    png_read_image(png_ptr, row_pointers);
+
+    // Generate the OpenGL texture object
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, temp_width, temp_height, 0, format, GL_UNSIGNED_BYTE, image_data);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // clean up
+    png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+    free(image_data);
+    free(row_pointers);
     fclose(fp);
-    return true;
+    return texture;
 }
+
+
+
 
 class Coordenada {
 public:
@@ -108,8 +224,9 @@ public:
         conteudo_texto = content;
     }
 
-    void render(){
+    void render(float x, float y){
         glPushMatrix();
+        glTranslatef(x-20.5, y+18, 0);
         glColor3f(cor.r, cor.g, cor.b);
         glRasterPos2f(1,1);
         for (int i = 0; i < sizeof conteudo_texto; ++i){
@@ -154,9 +271,9 @@ public:
         float velocidade;
         if ((keyStates['w'] + keyStates['s'] + keyStates['a'] + keyStates['d']) > 1 ||
             (keyStates['W'] + keyStates['S'] + keyStates['A'] + keyStates['D']) > 1){
-            velocidade = 0.7*0.01;
+            velocidade = 0.7*0.04;
         }else{
-            velocidade = 0.01;
+            velocidade = 0.04;
         }
         if(keyStates['w'] || keyStates['W'] ){ pos.y += velocidade; }
         if(keyStates['s'] || keyStates['S'] ){ pos.y -= velocidade; }
@@ -178,8 +295,14 @@ public:
         glPushMatrix();
             glTranslatef(pos.x, pos.y, 0);
             glRotatef(inclinacao, 0, 0, 1);
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
             glEnable(GL_TEXTURE_2D);
-            glActiveTexture(textureID);
+
+            if (tempo %100 <  50){
+                glBindTexture(GL_TEXTURE_2D, idle_shotgun_0);
+            }else{
+                glBindTexture(GL_TEXTURE_2D, idle_shotgun_1);
+            }
                 glBegin(GL_QUADS);
                     glTexCoord2f(0.0, 0.0);
                     glVertex2f( -2.0,-2.0);
@@ -191,7 +314,7 @@ public:
                     glVertex2f(  2.0,-2.0);
                 glEnd();
             glDisable(GL_TEXTURE_2D);
-            if (tempo%5 < 1 && shoot){
+            if (tempo%4 < 1 && shoot){
                 rand_offset = (rand() % 5  ) - 2.5;
                 glPushMatrix();
                     glRotatef(rand_offset-86, 0, 0, 1);
@@ -259,7 +382,7 @@ Arma    faca(  1,   20,     1,    0,       1,  0);
 Arma   glock(  1,   30,     3,    6,      11,  2);
 Arma    doze(  1,   100,    1,    8,       5,  6);
 Arma    ak47(  1,   40 ,    8,    3,      25,  3);
-Texto  texto("(0,0)", PRETO);
+Texto  texto("(0,0)", BRANCO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 Mira mira;
 
@@ -272,6 +395,7 @@ void myDisplay(void){
     glRotatef(0, 1, 1, 1);
 
     mira.render(player.pos.x, player.pos.y);
+    texto.render(player.pos.x, player.pos.y);
 
 
     glBegin(GL_POLYGON);
@@ -283,7 +407,6 @@ void myDisplay(void){
     glEnd();
     player.render();
 
-    // texto.render();
 
     glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glutSwapBuffers();
@@ -294,24 +417,13 @@ void myDisplay(void){
 void initTextures(){
     glClearColor(0,0,0,0);
     glEnable(GL_DEPTH_TEST);
-    // The following two lines enable semi transparent
-    glEnable(GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glEnable(GL_BLEND);
+    // glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
  
     char filename[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
-    bool hasAlpha;
-    int width, height;
-    bool success = loadPngImage(filename, width, height, hasAlpha, &idle_shotgun_0);
-    std::cout << "Image loaded " << width << " " << height << " alpha " << hasAlpha << std::endl;
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width, height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, idle_shotgun_0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glShadeModel(GL_FLAT);
+
+    idle_shotgun_0 = png_texture_load("./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png", NULL, NULL);
+    idle_shotgun_1 = png_texture_load("./Top_Down_Survivor/knife/meleeattack/survivor-meleeattack_knife_11.png", NULL, NULL);
 }
 
 void myIdle(){
