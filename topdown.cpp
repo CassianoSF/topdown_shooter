@@ -14,8 +14,10 @@ GLfloat win = 250.0f;
 int tempo = 0;
 int* keyStates = new int[256];
 GLubyte *idle_shotgun_0;
-int screen_w = 1300;
+int screen_w = 700;
 int screen_h = 700;
+int rand_offset;
+GLuint textureID;
 
 bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) {
      png_structp png_ptr;
@@ -70,27 +72,12 @@ bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, 
     return true;
 }
 
-class Textura{
-public:
-    Textura(const char *pfilePath){
-      if(LoadFile(pfilePath)==ERROR)
-         return;
-      textureID=0;
-      glGenTextures(1, &textureID);
-      //More GL code...
-    }
-
-    ~Textura(){
-        textureID glDeleteTextures(1, &textureID);
-    }
-};
-
 class Coordenada {
 public:
     float x, y;
-    void set(float _x, float _y){
-        x=_x;
-        y=_y;
+    void set(float p_x, float p_y){
+        x=p_x;
+        y=p_y;
     }
 };
 
@@ -178,40 +165,45 @@ public:
     }
 
     void rotate(int x, int y){
-        y = -y + 350;
-        x =  x - 350;
+        y = (-y + 350) * 35;
+        x = ( x - 350) * 35;
         if(x != 0 && y !=0){
             inclinacao = (-(GLfloat)atan2(x-pos.x,y-pos.y)/3.1415*180.0)+90;
         } 
     }
 
     void render(){
-        int rand_offset = (rand() % 5  ) - 2.5;
+        // cout << "player.x:" << pos. x << endl;
+        // cout << "player.y:" << pos. y << endl;
         glPushMatrix();
-        glTranslatef(pos.x, pos.y, 0);
-        glRotatef(inclinacao, 0, 0, 1);
-        if (tempo%8 < 3 && shoot){
-            glPushMatrix();
-            glRotatef(rand_offset-90, 0, 0, 1);
-            glBegin(GL_POLYGON);
-            glColor4f(1, 1, 0, 1);
-            glVertex2f( +0.8, -0.0);
-            glVertex2f( +0.8, +100);
-            glVertex2f( +1.0, +100);
-            glVertex2f( +1.0, -0.0);
-            glEnd();
-            glPopMatrix();
-        }
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f( -2.0,-2.0);
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f( -2.0, 2.0);
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f(  2.0, 2.0);
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f(  2.0,-2.0);
-        glEnd();
+            glTranslatef(pos.x, pos.y, 0);
+            glRotatef(inclinacao, 0, 0, 1);
+            glEnable(GL_TEXTURE_2D);
+            glActiveTexture(textureID);
+                glBegin(GL_QUADS);
+                    glTexCoord2f(0.0, 0.0);
+                    glVertex2f( -2.0,-2.0);
+                    glTexCoord2f(0.0, 1.0);
+                    glVertex2f( -2.0, 2.0);
+                    glTexCoord2f(1.0, 1.0);
+                    glVertex2f(  2.0, 2.0);
+                    glTexCoord2f(1.0, 0.0);
+                    glVertex2f(  2.0,-2.0);
+                glEnd();
+            glDisable(GL_TEXTURE_2D);
+            if (tempo%5 < 1 && shoot){
+                rand_offset = (rand() % 5  ) - 2.5;
+                glPushMatrix();
+                    glRotatef(rand_offset-86, 0, 0, 1);
+                    glBegin(GL_POLYGON);
+                        glColor4f(1, 1, 0, 1);
+                        glVertex2f( +0.88, -0.0);
+                        glVertex2f( +0.88, +100);
+                        glVertex2f( +0.95, +100);
+                        glVertex2f( +0.95, -0.0);
+                    glEnd();
+                glPopMatrix();
+            }
         glPopMatrix();
 
 
@@ -222,27 +214,33 @@ class Mira {
 public:
     Coordenada pos;
 
-    void render(){
+    void atualiza(int x, int y){
+        pos.y = (-y + 350.0f) / 35;
+        pos.x = ( x - 350.0f) / 35;
+    }
+
+    void render(float x, float y){
         glPushMatrix();
-        glTranslatef(pos.x, pos.y, 0);
-        glBegin(GL_LINE_LOOP);
-        glColor3f(0, 0, 0);
-        for(int i = 0; i < 30; i++){
-            float theta = 2.0f * 3.1415926f * float(i) / float(30);
-            float cx = 0.5 * cosf(theta);
-            float cy = 0.5 * sinf(theta);
-            glVertex2f(cx + 0, cy + 0);
-        }
-        glEnd();
-        glBegin(GL_LINE_LOOP);
-        glColor3f(0.3, 0, 0);
-        for(int i = 0; i < 30; i++){
-            float theta = 2.0f * 3.1415926f * float(i) / float(30);
-            float cx = 0.1 * cosf(theta);
-            float cy = 0.1 * sinf(theta);
-            glVertex2f(cx + 0, cy + 0);
-        }
-        glEnd();
+            glTranslatef(pos.x + x, pos.y + y , 0);
+            glBegin(GL_LINE_LOOP);
+                glColor4f(1, 1, 0, 1);
+                for(int i = 0; i < 30; i++){
+                    float theta = 2.0f * 3.1415926f * float(i) / float(30);
+                    float cx = 0.5 * cosf(theta);
+                    float cy = 0.5 * sinf(theta);
+                    glVertex2f(pos.x+cx + 0, pos.y+cy + 0);
+                }
+            glEnd();
+
+            glBegin(GL_LINE_LOOP);
+                glColor4f(1, 1, 0, 1);
+                for(int i = 0; i < 30; i++){
+                    float theta = 2.0f * 3.1415926f * float(i) / float(30);
+                    float cx = 0.1 * cosf(theta);
+                    float cy = 0.1 * sinf(theta);
+                    glVertex2f(pos.x+cx + 0, pos.y+cy + 0);
+                }
+            glEnd();
         glPopMatrix();
     }
 };
@@ -256,38 +254,14 @@ Cor  AMARELO(1.0,1.0,0.0);
 Cor    PRETO(0.0,0.0,0.0);
 Cor  LARANJA(1.0,0.6,0.3);
 Cor  BRANCO( 1.0,1.0,1.0);
-
 //      Arma(  num, damage, rate, reload, cap, accuracy  )
 Arma    faca(  1,   20,     1,    0,       1,  0);
 Arma   glock(  1,   30,     3,    6,      11,  2);
 Arma    doze(  1,   100,    1,    8,       5,  6);
 Arma    ak47(  1,   40 ,    8,    3,      25,  3);
-
 Texto  texto("(0,0)", PRETO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 Mira mira;
-
-void initTextures(){
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glEnable(GL_DEPTH_TEST);
-    // The following two lines enable semi transparent
-    glEnable(GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
- 
-    int width, height;
-    bool hasAlpha;
-    char filename[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
-    bool success = loadPngImage(filename, width, height, hasAlpha, &idle_shotgun_0);
-    std::cout << "Image loaded " << width << " " << height << " alpha " << hasAlpha << std::endl;
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width, height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, idle_shotgun_0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glEnable(GL_TEXTURE_2D);
-    glShadeModel(GL_FLAT);
-}
 
 void myDisplay(void){
     // REDERIZAÇÃO
@@ -297,7 +271,16 @@ void myDisplay(void){
     glTranslatef(-player.pos.x, -player.pos.y, -35);
     glRotatef(0, 1, 1, 1);
 
-    // mira.render();
+    mira.render(player.pos.x, player.pos.y);
+
+
+    glBegin(GL_POLYGON);
+    glColor4f(1, 1, 0, 1);
+    glVertex2f( -4, +2);
+    glVertex2f( -4, +4);
+    glVertex2f( +4, +4);
+    glVertex2f( +4, +2);
+    glEnd();
     player.render();
 
     // texto.render();
@@ -308,6 +291,29 @@ void myDisplay(void){
 
 }
 
+void initTextures(){
+    glClearColor(0,0,0,0);
+    glEnable(GL_DEPTH_TEST);
+    // The following two lines enable semi transparent
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+ 
+    char filename[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
+    bool hasAlpha;
+    int width, height;
+    bool success = loadPngImage(filename, width, height, hasAlpha, &idle_shotgun_0);
+    std::cout << "Image loaded " << width << " " << height << " alpha " << hasAlpha << std::endl;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width, height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, idle_shotgun_0);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glShadeModel(GL_FLAT);
+}
+
 void myIdle(){
     tempo++;
     player.caminha();
@@ -316,6 +322,7 @@ void myIdle(){
 }
 
 void mouseClicks(int button, int state, int x, int y){
+    mira.atualiza(x,y);
     player.rotate(x, y);
     player.shoot = state == GLUT_DOWN;
 }
@@ -329,16 +336,16 @@ void keyUp(unsigned char tecla, int x, int y){
 }
 
 void cursormouse(int x, int y){
-    mira.pos.set(x, y);
-    player.rotate(x, y);
+    mira.atualiza(x,y);
+    player.rotate(x,y);
     char temp[100];
     sprintf(temp, " (%d, %d)  %f", x, y, player.inclinacao);
     texto.set_texto(temp);
 }
 
 void atirando(int x, int y){
+    mira.atualiza(x,y);
     player.rotate(x, y);
-    mira.pos.set(x, y);
 }
 
 void myReshape(GLsizei w, GLsizei h){ 
