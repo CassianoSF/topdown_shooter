@@ -1,5 +1,6 @@
-// g++ -std=c++11 topdown.cpp -lglut -lGLU -lGL -lpng
+// g++ -std=c++17 topdown.cpp  -lglut -lGLU -lGL -lpng -lGLESv2 -lglfw -lstdc++fs
 
+#define GLFW_INCLUDE_ES2
 #include <GL/glut.h>  
 #include <stdio.h>
 #include <stdlib.h> 
@@ -11,21 +12,59 @@
 #include <GL/gl.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-
-#define GLFW_INCLUDE_ES2
+#include <vector>
+#include <algorithm>
 #include <GLFW/glfw3.h>
+#include <experimental/filesystem>
 
+namespace fs = std::experimental::filesystem;
 using namespace std;
 
 int tempo = 0;
 int* keyStates = new int[256];
-static GLuint idle_shotgun_0;
-static GLuint idle_shotgun_1;
+static GLuint textures[420];
+
+static GLuint flashlight_meleeattack[15];
+static GLuint flashlight_move[20];
+static GLuint flashlight_idle[20];
+
+static GLuint feet_walk[20];
+static GLuint feet_strafe_left[20];
+static GLuint feet_strafe_right[20];
+static GLuint feet_run[20];
+static GLuint feet_idle;
+
+static GLuint knife_meleeattack[15];
+static GLuint knife_move[20];
+static GLuint knife_idle[20];
+
+static GLuint handgun_move[20];
+static GLuint handgun_shoot[3];
+static GLuint handgun_meleeattack[15];
+static GLuint handgun_reload[15];
+static GLuint handgun_idle[20];
+
+
+static GLuint shotgun_move[20];
+static GLuint shotgun_shoot[3];
+static GLuint shotgun_meleeattack[15];
+static GLuint shotgun_reload[20];
+static GLuint shotgun_idle[20];
+
+
+static GLuint rifle_move[20];
+static GLuint rifle_shoot[3];
+static GLuint rifle_meleeattack[15];
+static GLuint rifle_reload[20];
+static GLuint rifle_idle[20];
+
+
+static GLuint flashlight_textures[420];
+
 int screen_w = 700;
 int screen_h = 700;
 int rand_offset;
 GLuint textureID;
-
 
 
 GLuint png_texture_load(const char * file_name, int * width, int * height)
@@ -297,12 +336,7 @@ public:
             glRotatef(inclinacao, 0, 0, 1);
             glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
             glEnable(GL_TEXTURE_2D);
-
-            if (tempo %100 <  50){
-                glBindTexture(GL_TEXTURE_2D, idle_shotgun_0);
-            }else{
-                glBindTexture(GL_TEXTURE_2D, idle_shotgun_1);
-            }
+                glBindTexture(GL_TEXTURE_2D, textures[tempo/50]);
                 glBegin(GL_QUADS);
                     glTexCoord2f(0.0, 0.0);
                     glVertex2f( -2.0,-2.0);
@@ -420,16 +454,35 @@ void initTextures(){
     // glEnable(GL_BLEND);
     // glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
  
-    char filename[] = "./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png";
+    std::string path = "./_player/";
+    string path_string_array[420];
+    int i = 0;
+    for (auto & p : fs::directory_iterator(path)){
+        for (auto & pp : fs::directory_iterator(p)){
+            for (auto & ppp : fs::directory_iterator(pp)){
+                path_string_array[i] = ppp.path().string().c_str();
+                char *path_char_array_dos_inferno = new char[path_string_array[i].size()+1];
+                strncpy(path_char_array_dos_inferno, path_string_array[i].c_str(), path_string_array[i].size());
+                textures[i] = png_texture_load(path_char_array_dos_inferno, NULL, NULL);
+                i++;
+            }
+        }
+    }
+    // std::sort(path_string_array[0], path_string_array[419] );
+    for (int i=0; i < 420; ++i)
+    {
+        cout << path_string_array[i] << endl;
+    }
+        
 
-    idle_shotgun_0 = png_texture_load("./Top_Down_Survivor/shotgun/idle/survivor-idle_shotgun_0.png", NULL, NULL);
-    idle_shotgun_1 = png_texture_load("./Top_Down_Survivor/knife/meleeattack/survivor-meleeattack_knife_11.png", NULL, NULL);
+    // char filename[] = "./_player/shotgun/idle/survivor-idle_shotgun_0.png";
+    // textures[1] = png_texture_load("./_player/knife/meleeattack/survivor-meleeattack_knife_11.png", NULL, NULL);
 }
 
 void myIdle(){
     tempo++;
     player.caminha();
-    if (tempo == 1000)
+    if (tempo == 420*50)
         tempo = 0;
 }
 
