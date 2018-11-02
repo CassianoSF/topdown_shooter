@@ -1,4 +1,4 @@
-// g++ -std=c++17 topdown.cpp  -lglut -lGLU -lGL -lpng -lGLESv2 -lglfw -lstdc++fs
+// g++ -std=c++17 topdown.cpp  -lglut -lGLU -lGL -lpng  -lstdc++fs
 
 #define GLFW_INCLUDE_ES2
 #include <GL/glut.h>  
@@ -289,6 +289,31 @@ public:
     }
 };
 
+class Textura {
+public:
+    string animacao;
+    int index;
+    GLuint data;
+    // Textura(GLuint data, string filename){
+
+    Textura(string filename){
+        string str_id = filename.substr(filename.size()-6, filename.size()).substr(0,2);
+        index = str_id[1];
+        // if (str_id.filename.size()-6 == "_")
+            // index = stoi(?str_id[0]);
+        
+        cout << str_id[0] <<  endl;    
+        
+        // string s = "100 123 42";
+        // istringstream is( s );
+        // int n;
+        // while( is >> n ) {
+            
+        // }  
+    }
+};
+
+  
 class Player {
 public:
     Coordenada pos;
@@ -420,6 +445,18 @@ Texto  texto("(0,0)", BRANCO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 Mira mira;
 
+
+
+
+//################    ##################    ###################    ##################
+//################    ##################    ###################    ##################
+//################    ##################    ###################    ##################
+//################    ##################    ###################    ##################
+
+
+
+
+
 void myDisplay(void){
     // REDERIZAÇÃO
     glLoadIdentity();
@@ -456,10 +493,13 @@ void initTextures(){
  
     std::string path = "./_player/";
     string path_string_array[420];
+    string str_temp; 
     int i = 0;
     for (auto & p : fs::directory_iterator(path)){
         for (auto & pp : fs::directory_iterator(p)){
             for (auto & ppp : fs::directory_iterator(pp)){
+                str_temp = ppp.path().string().c_str();
+                Textura teste(str_temp);
                 path_string_array[i] = ppp.path().string().c_str();
                 char *path_char_array_dos_inferno = new char[path_string_array[i].size()+1];
                 strncpy(path_char_array_dos_inferno, path_string_array[i].c_str(), path_string_array[i].size());
@@ -468,12 +508,6 @@ void initTextures(){
             }
         }
     }
-    // std::sort(path_string_array[0], path_string_array[419] );
-    for (int i=0; i < 420; ++i)
-    {
-        cout << path_string_array[i] << endl;
-    }
-        
 
     // char filename[] = "./_player/shotgun/idle/survivor-idle_shotgun_0.png";
     // textures[1] = png_texture_load("./_player/knife/meleeattack/survivor-meleeattack_knife_11.png", NULL, NULL);
