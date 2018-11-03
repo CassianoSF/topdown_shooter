@@ -22,17 +22,7 @@
 namespace fs = std::experimental::filesystem;
 using namespace std;
 
-int tempo = 0;
-int frame_time = 20;
-int* keyStates = new int[256];
-int screen_w = 700;
-int screen_h = 700;
-int rand_offset;
-GLuint textureID;
-
-
-GLuint png_texture_load(const char * file_name, int * width, int * height)
-{
+GLuint png_texture_load(const char * file_name, int * width, int * height){
     // This function was originally written by David Grayson for
     // https://github.com/DavidEGrayson/ahrs-visualizer
 
@@ -250,9 +240,12 @@ class Texto {
 
 class Arma{
     public:
+    string name;
     int num, damage, cap;
     float rate, reload, accuracy;
-    Arma(int _damage, int _cap, int _num, float _rate, float _reload, float _accuracy){
+    Arma(){}
+    Arma(string _name, int _damage, int _cap, int _num, float _rate, float _reload, float _accuracy){
+        name     =     _name;
         num      =      _num;
         damage   =   _damage;
         rate     =     _rate;
@@ -305,38 +298,160 @@ class Textura {
         cout << animacao << endl;
         data = tex;
     }
+
+    void render(){
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        glEnable(GL_TEXTURE_2D);
+        if(animacao == "knife_meleeattack"){
+            glTranslatef(0.2,-0.8,6);
+        }
+        if(animacao == "rifle_meleeattack" || animacao == "shotgun_meleeattack"){
+            glTranslatef(0,0,6);
+        }
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBindTexture(GL_TEXTURE_2D, data);
+    }
 };
 
 class Player {
     public:
     Coordenada pos;
     Cor cor;   
-    int num_segmentos, animacao_frames;
+    int animacao_frames;
     float raio, inclinacao;
-    string caminhando, arma, animacao;
+    
+    string animacao;
+    Arma arma;
 
-    bool shoot;
+    bool shoot=false, 
+         idle=true, 
+         walk=false, 
+         run=false, 
+         reload=false, 
+         attack=false;
 
-    Player(float x, float y, float r, int seg, float angulo, Cor c){
+    Player(Arma _arma, float x, float y, float r, float angulo, Cor c){
         cor.set(c);
         pos = Coordenada(x,y);
-        num_segmentos=seg;
         inclinacao = angulo;
         raio = r;
-        arma = "flashlight";
+        arma = _arma;
     }
 
-    void troca_arma(string nome){
-        arma = nome;
+    void atualiza(int tempo){
+        if(reload){
+            if (arma.name == "shotgun"){
+                animacao = "shotgun_reload";
+                animacao_frames = 15;
+            }
+            if (arma.name == "handgun"){
+                animacao = "handgun_reload";
+                animacao_frames = 15;
+            }
+            if (arma.name == "rifle"){
+                animacao = "rifle_reload";
+                animacao_frames = 15;
+            }            
+        }else if (attack){
+            if (arma.name == "shotgun"){
+                animacao = "shotgun_meleeattack";
+                animacao_frames = 15;
+            }
+            if (arma.name == "handgun"){
+                animacao = "handgun_meleeattack";
+                animacao_frames = 15;
+            }
+            if (arma.name == "rifle"){
+                animacao = "rifle_meleeattack";
+                animacao_frames = 15;
+            }
+            if (arma.name == "knife"){
+                animacao = "knife_meleeattack";
+                animacao_frames = 15;
+            }
+            if (arma.name == "flashlight"){
+                animacao = "flashlight_meleeattack";
+                animacao_frames = 15;
+            }
+        }else if (shoot){
+            if (arma.name == "shotgun"){
+                animacao = "shotgun_shoot";
+                animacao_frames = 3;
+            }
+            if (arma.name == "handgun"){
+                animacao = "handgun_shoot";
+                animacao_frames = 3;
+            }
+            if (arma.name == "rifle"){
+                animacao = "rifle_shoot";
+                animacao_frames = 3;
+            }
+        }else if(walk || run){
+            if (arma.name == "shotgun"){
+                animacao = "shotgun_move";
+                animacao_frames = 20;
+            }
+            if (arma.name == "handgun"){
+                animacao = "handgun_move";
+                animacao_frames = 20;
+            }
+            if (arma.name == "rifle"){
+                animacao = "rifle_move";
+                animacao_frames = 20;
+            }
+            if (arma.name == "knife"){
+                animacao = "knife_move";
+                animacao_frames = 20;
+            }
+            if (arma.name == "flashlight"){
+                animacao = "flashlight_move";
+                animacao_frames = 20;
+            }
+        }else if(idle){
+            if (arma.name == "shotgun"){
+                animacao = "shotgun_idle";
+                animacao_frames = 20;
+            }
+            if (arma.name == "handgun"){
+                animacao = "handgun_idle";
+                animacao_frames = 20;
+            }
+            if (arma.name == "rifle"){
+                animacao = "rifle_idle";
+                animacao_frames = 20;
+            }
+            if (arma.name == "knife"){
+                animacao = "knife_idle";
+                animacao_frames = 20;
+            }
+            if (arma.name == "flashlight"){
+                animacao = "flashlight_idle";
+                animacao_frames = 20;
+            }
+        }
     }
 
-    void caminha(){
+        // stringstream ss;
+        // ss << arma << "_" << animacao;
+        // animacao = ss.str();
+
+    void caminha(int* keyStates){
+        float speed_mult = 0.01;
+        if (run)
+            speed_mult = 0.017;
         float velocidade;
-        if ((keyStates['w'] + keyStates['s'] + keyStates['a'] + keyStates['d']) > 1 ||
-            (keyStates['W'] + keyStates['S'] + keyStates['A'] + keyStates['D']) > 1){
-            velocidade = 0.7*0.04;
+        int move = (keyStates['w'] + keyStates['s'] + keyStates['a'] + keyStates['d'] +
+                    keyStates['W'] + keyStates['S'] + keyStates['A'] + keyStates['D']);
+        if(move){
+            walk = true;
         }else{
-            velocidade = 0.04;
+            walk = false;
+        }
+        if (move > 1){
+            velocidade = 0.7*speed_mult;
+        }else{
+            velocidade = speed_mult;
         }
         if(keyStates['w'] || keyStates['W'] ){ pos.y += velocidade; }
         if(keyStates['s'] || keyStates['S'] ){ pos.y -= velocidade; }
@@ -352,26 +467,31 @@ class Player {
         } 
     }
 
-    void render(Textura texturas[420]){
+    void render(Textura texturas[420], int tempo, int frame_time){
         // cout << "player.x:" << pos. x << endl;
         // cout << "player.y:" << pos. y << endl;
         glPushMatrix();
             glTranslatef(pos.x, pos.y, 0);
             glRotatef(inclinacao, 0, 0, 1);
-            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-            glEnable(GL_TEXTURE_2D);
+            if (tempo%40 < 20 && shoot){
+                int rand_offset = (rand() % 5  ) - 2.5;
+                glPushMatrix();
+                    glRotatef(rand_offset-86, 0, 0, 1);
+                    glBegin(GL_POLYGON);
+                        glColor4f(1, 1, 0, 1);
+                        glVertex2f( +1.08, -0.0);
+                        glVertex2f( +1.08, +100);
+                        glVertex2f( +1.13, +100);
+                        glVertex2f( +1.13, -0.0);
+                    glEnd();
+                glPopMatrix();
+            }
                 Textura texture;
                 for (int i = 0; i < 420; ++i){
                     if(texturas[i].animacao == animacao && texturas[i].index == (tempo / frame_time) % animacao_frames)
-                        texture = texturas[i];
+                        texturas[i].render();
                 }
-                if(animacao == "knife_meleeattack"){
-                    glTranslatef(0.2,-0.8,6);
-                }
-                glEnable(GL_DEPTH_TEST);
-                glEnable(GL_BLEND);
-                glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glBindTexture(GL_TEXTURE_2D, texture.data);
+                // glEnable(GL_DEPTH_TEST);
                 glBegin(GL_QUADS);
                     glTexCoord2f(0.0, 0.0);
                     glVertex2f( -2.0,-2.0);
@@ -383,22 +503,7 @@ class Player {
                     glVertex2f(  2.0,-2.0);
                 glEnd();
             glDisable(GL_TEXTURE_2D);
-            if (tempo%40 < 20 && shoot){
-                rand_offset = (rand() % 5  ) - 2.5;
-                glPushMatrix();
-                    glRotatef(rand_offset-86, 0, 0, 1);
-                    glBegin(GL_POLYGON);
-                        glColor4f(1, 1, 0, 1);
-                        glVertex2f( +1.10, -0.0);
-                        glVertex2f( +1.10, +100);
-                        glVertex2f( +1.15, +100);
-                        glVertex2f( +1.15, -0.0);
-                    glEnd();
-                glPopMatrix();
-            }
         glPopMatrix();
-
-
     }
 };
 
@@ -468,6 +573,14 @@ class GameObject{
     }
 };
 
+
+
+int* keyStates = new int[256];
+int screen_w = 700;
+int screen_h = 700;
+int tempo = 0;
+int frame_time = 80;
+
 //       Cor(r, g, b, a)
 Cor    CINZA(0.5, 0.5, 0.5, 1.0);
 Cor VERMELHO(1.0, 0.0, 0.0, 1.0);
@@ -477,22 +590,23 @@ Cor  AMARELO(1.0, 1.0, 0.0, 1.0);
 Cor    PRETO(0.0, 0.0, 0.0, 1.0);
 Cor  LARANJA(1.0, 0.6, 0.3, 1.0);
 Cor  BRANCO( 1.0, 1.0, 1.0, 1.0);
-//      Arma(  num, damage, rate, reload, cap, accuracy  )
-Arma    faca(  1,   20,     1,    0,      1,   0         );
-Arma   glock(  1,   30,     3,    6,      11,  2         );
-Arma    doze(  1,   100,    1,    8,      5,   6         );
-Arma    ak47(  1,   40,     8,    3,      25,  3         );
+//         Arma(  name,        num, damage, rate, reload, cap, accuracy  )
+Arma      knife( "knife",      1,   20,     1,    0,       1,   0         );
+Arma    handgun( "handgun",    1,   30,     3,    60,      11,  2         );
+Arma    shotgun( "shotgun",    1,   100,    1,    80,      5,   6         );
+Arma      rifle( "rifle",      1,   40,     8,    30,      25,  3         );
+Arma flashlight( "flashlight", 1,   40,     8,    30,      25,  3         );
 
 Texto  texto("(0,0)", BRANCO);
-Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
+Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO);
 Mira mira;
 
 Textura texturas[420];
 Coordenada origem(0,0);
 GameObject tiro(origem, texturas[0], AMARELO, 100, 0.1, 0);
-GameObject obstaculo_0(Coordenada(20,-40), texturas[0], PRETO, 10, 10, 10);
-GameObject obstaculo_1(Coordenada(-10,-30), texturas[0], PRETO, 10, 10, 40);
-GameObject obstaculo_2(Coordenada(-2,10), texturas[0], PRETO, 10, 10, -210);
+GameObject obstaculo_0(Coordenada(20,-40), texturas[0], BRANCO, 10, 10, 10);
+GameObject obstaculo_1(Coordenada(-10,-30), texturas[0], BRANCO, 10, 10, 40);
+GameObject obstaculo_2(Coordenada(-2,10), texturas[0], BRANCO, 10, 10, -210);
 
 
 
@@ -513,7 +627,7 @@ void myDisplay(void){
 
     mira.render(player.pos.x, player.pos.y);
     texto.render(player.pos.x, player.pos.y);
-    player.render(texturas);
+    player.render(texturas, tempo, frame_time);
     obstaculo_0.render();
     obstaculo_1.render();
     obstaculo_2.render();
@@ -524,10 +638,8 @@ void myDisplay(void){
 }
 
 void loadTextures(){
-    glClearColor(1,1,1,1);
+    glClearColor(0,0,0,1);
     // glDepthMask(GL_FALSE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     std::string path = "./_player/";
     string path_string_array[420];
@@ -546,62 +658,52 @@ void loadTextures(){
             }
         }
     }
-
-    // char filename[] = "./_player/shotgun/idle/survivor-idle_shotgun_0.png";
-    // textures[1] = png_texture_load("./_player/knife/meleeattack/survivor-meleeattack_knife_11.png", NULL, NULL);
 }
 
 void myIdle(){
+    cout << player.run << endl;
     tempo++;
-    player.caminha();
+    player.atualiza(tempo);
+    player.caminha(keyStates);
     if (tempo == 420*frame_time)
         tempo = 0;
 }
 
 void mouseClicks(int button, int state, int x, int y){
+    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
     mira.atualiza(x,y);
     player.rotate(x,y);
-    player.shoot = state == GLUT_DOWN;
-    if (player.arma == "shotgun"){
-        player.animacao = "shotgun_shoot";
-        player.animacao_frames = 3;
-    }
-    if (player.arma == "handgun"){
-        player.animacao = "handgun_shoot";
-        player.animacao_frames = 3;
-    }
-    if (player.arma == "rifle"){
-        player.animacao = "rifle_shoot";
-        player.animacao_frames = 3;
-    }
-    if (player.arma == "knife"){
-        player.animacao = "knife_meleeattack";
-        player.animacao_frames = 15;
-    }
-    if (player.arma == "flashlight"){
-        player.animacao = "flashlight_meleeattack";
-        player.animacao_frames = 15;
-    }
+    player.shoot = (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN);
+    player.attack = (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN);
 }
 
 void keyDown(unsigned char tecla, int x, int y){
+    tempo = 0;
+    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
     keyStates[tecla] = 1;
+    if(tecla == 'r' || tecla == 'R')
+        player.reload = true;
     if(tecla == '1')
-        player.troca_arma("knife");
+        player.arma = knife;
     if(tecla == '2')
-        player.troca_arma("handgun");
+        player.arma = handgun;
     if(tecla == '3')
-        player.troca_arma("shotgun");
+        player.arma = shotgun;
     if(tecla == '4')
-        player.troca_arma("rifle");
+        player.arma = rifle;
     if(tecla == 'f' || tecla == 'F' )
-        player.troca_arma("flashlight");
+        player.arma = flashlight;
 }
 
 void keyUp(unsigned char tecla, int x, int y){
     //
     //
     //
+    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
+    if (tecla == 'a' || tecla == 'A'){ keyStates['a'] = 0; keyStates['A'] = 0;}
+    if (tecla == 's' || tecla == 'S'){ keyStates['s'] = 0; keyStates['S'] = 0;}
+    if (tecla == 'd' || tecla == 'D'){ keyStates['d'] = 0; keyStates['D'] = 0;}
+    if (tecla == 'w' || tecla == 'W'){ keyStates['w'] = 0; keyStates['W'] = 0;}
     keyStates[tecla] = 0;
 }
 
