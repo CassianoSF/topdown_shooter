@@ -4,6 +4,7 @@
 #include <GL/glut.h>  
 #include <stdio.h>
 #include <stdlib.h> 
+#include <sstream> 
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -16,51 +17,14 @@
 #include <algorithm>
 #include <GLFW/glfw3.h>
 #include <experimental/filesystem>
+#include <regex>
 
 namespace fs = std::experimental::filesystem;
 using namespace std;
 
 int tempo = 0;
+int frame_time = 20;
 int* keyStates = new int[256];
-static GLuint textures[420];
-
-static GLuint flashlight_meleeattack[15];
-static GLuint flashlight_move[20];
-static GLuint flashlight_idle[20];
-
-static GLuint feet_walk[20];
-static GLuint feet_strafe_left[20];
-static GLuint feet_strafe_right[20];
-static GLuint feet_run[20];
-static GLuint feet_idle;
-
-static GLuint knife_meleeattack[15];
-static GLuint knife_move[20];
-static GLuint knife_idle[20];
-
-static GLuint handgun_move[20];
-static GLuint handgun_shoot[3];
-static GLuint handgun_meleeattack[15];
-static GLuint handgun_reload[15];
-static GLuint handgun_idle[20];
-
-
-static GLuint shotgun_move[20];
-static GLuint shotgun_shoot[3];
-static GLuint shotgun_meleeattack[15];
-static GLuint shotgun_reload[20];
-static GLuint shotgun_idle[20];
-
-
-static GLuint rifle_move[20];
-static GLuint rifle_shoot[3];
-static GLuint rifle_meleeattack[15];
-static GLuint rifle_reload[20];
-static GLuint rifle_idle[20];
-
-
-static GLuint flashlight_textures[420];
-
 int screen_w = 700;
 int screen_h = 700;
 int rand_offset;
@@ -227,9 +191,32 @@ GLuint png_texture_load(const char * file_name, int * width, int * height)
 
 
 
+
+
+
+
+
+// #####################      #####################      #####################    
+// #####################      #####################      #####################    
+// #####################      #####################      #####################    
+// #####################      #####################      #####################    
+
+
+
+
+
+
+
+
+
 class Coordenada {
 public:
     float x, y;
+    Coordenada(){}  
+    Coordenada(float _x, float _y){
+        x = _x;
+        y = _y;
+    }
     void set(float p_x, float p_y){
         x=p_x;
         y=p_y;
@@ -238,11 +225,12 @@ public:
 
 class Cor {
 public:
-    float r, g, b;
-    Cor(): r(0.0f), g(0.0f), b(0.0f){ }
-    Cor(float red ,float green ,float blue): r(red), g(green), b(blue){ }
+    float r, g, b, a;
+    Cor(): r(0.0f), g(0.0f), b(0.0f), a(0.0f){ }
+    Cor(float red ,float green ,float blue, float alpha): r(red), g(green), b(blue), a(alpha){ }
 
     void set(Cor c){
+        a = c.a;
         r = c.r;
         g = c.g;
         b = c.b;      
@@ -294,42 +282,68 @@ public:
     string animacao;
     int index;
     GLuint data;
-    // Textura(GLuint data, string filename){
-
-    Textura(string filename){
-        string str_id = filename.substr(filename.size()-6, filename.size()).substr(0,2);
-        index = str_id[1];
-        // if (str_id.filename.size()-6 == "_")
-            // index = stoi(?str_id[0]);
-        
-        cout << str_id[0] <<  endl;    
-        
-        // string s = "100 123 42";
-        // istringstream is( s );
-        // int n;
-        // while( is >> n ) {
-            
-        // }  
+    Textura(){}
+    void set(GLuint tex, string filename){
+        smatch m;
+        regex integer("(\\+|-)?[[:digit:]]+");
+        regex_search(filename, m, regex("(\\+|-)?[[:digit:]]+"));
+        for(auto v: m){
+            stringstream geek(v);
+            geek >> index;
+        }
+        regex_search(filename, m, regex("flashlight/meleeattack")); for(auto v: m){animacao = "flashlight_meleeattack";} 
+        regex_search(filename, m, regex("flashlight/move"));        for(auto v: m){animacao = "flashlight_move";} 
+        regex_search(filename, m, regex("flashlight/idle"));        for(auto v: m){animacao = "flashlight_idle";} 
+        regex_search(filename, m, regex("feet/walk"));              for(auto v: m){animacao = "feet_walk";} 
+        regex_search(filename, m, regex("feet/strafe_left"));       for(auto v: m){animacao = "feet_strafe_left";} 
+        regex_search(filename, m, regex("feet/strafe_right"));      for(auto v: m){animacao = "feet_strafe_right";} 
+        regex_search(filename, m, regex("feet/run"));               for(auto v: m){animacao = "feet_run";} 
+        regex_search(filename, m, regex("feet/idle"));              for(auto v: m){animacao = "feet_idle";} 
+        regex_search(filename, m, regex("knife/meleeattack"));      for(auto v: m){animacao = "knife_meleeattack";} 
+        regex_search(filename, m, regex("knife/move"));             for(auto v: m){animacao = "knife_move";} 
+        regex_search(filename, m, regex("knife/idle"));             for(auto v: m){animacao = "knife_idle";} 
+        regex_search(filename, m, regex("handgun/meleeattack"));    for(auto v: m){animacao = "handgun_meleeattack";} 
+        regex_search(filename, m, regex("handgun/move"));           for(auto v: m){animacao = "handgun_move";} 
+        regex_search(filename, m, regex("handgun/shoot"));          for(auto v: m){animacao = "handgun_shoot";} 
+        regex_search(filename, m, regex("handgun/reload"));         for(auto v: m){animacao = "handgun_reload";} 
+        regex_search(filename, m, regex("handgun/idle"));           for(auto v: m){animacao = "handgun_idle";} 
+        regex_search(filename, m, regex("rifle/meleeattack"));      for(auto v: m){animacao = "rifle_meleeattack";} 
+        regex_search(filename, m, regex("rifle/move"));             for(auto v: m){animacao = "rifle_move";} 
+        regex_search(filename, m, regex("rifle/shoot"));            for(auto v: m){animacao = "rifle_shoot";} 
+        regex_search(filename, m, regex("rifle/reload"));           for(auto v: m){animacao = "rifle_reload";} 
+        regex_search(filename, m, regex("rifle/idle"));             for(auto v: m){animacao = "rifle_idle";} 
+        regex_search(filename, m, regex("shotgun/meleeattack"));    for(auto v: m){animacao = "shotgun_meleeattack";} 
+        regex_search(filename, m, regex("shotgun/move"));           for(auto v: m){animacao = "shotgun_move";} 
+        regex_search(filename, m, regex("shotgun/shoot"));          for(auto v: m){animacao = "shotgun_shoot";} 
+        regex_search(filename, m, regex("shotgun/reload"));         for(auto v: m){animacao = "shotgun_reload";} 
+        regex_search(filename, m, regex("shotgun/idle"));           for(auto v: m){animacao = "shotgun_idle";} 
+        cout << animacao << endl;
+        data = tex;
     }
 };
 
-  
 class Player {
 public:
     Coordenada pos;
     Cor cor;   
-    int num_segmentos;
+    int num_segmentos, animacao_frames;
     float raio, inclinacao;
-    string caminhando, arma;
+    string caminhando, arma, animacao;
+
     bool shoot;
+
     Player(float x, float y, float r, int seg, float angulo, Cor c){
         cor.set(c);
         pos.set(x, y);
         num_segmentos=seg;
         inclinacao = angulo;
         raio = r;
-        arma = 1;
-    } 
+        arma = "flashlight";
+    }
+
+    void troca_arma(string nome){
+        arma = nome;
+    }
 
     void caminha(){
         float velocidade;
@@ -353,7 +367,7 @@ public:
         } 
     }
 
-    void render(){
+    void render(Textura texturas[420]){
         // cout << "player.x:" << pos. x << endl;
         // cout << "player.y:" << pos. y << endl;
         glPushMatrix();
@@ -361,7 +375,18 @@ public:
             glRotatef(inclinacao, 0, 0, 1);
             glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
             glEnable(GL_TEXTURE_2D);
-                glBindTexture(GL_TEXTURE_2D, textures[tempo/50]);
+                Textura texture;
+                for (int i = 0; i < 420; ++i){
+                    if(texturas[i].animacao == animacao && texturas[i].index == (tempo / frame_time) % animacao_frames)
+                        texture = texturas[i];
+                }
+                if(animacao == "knife_meleeattack"){
+                    glTranslatef(0.2,-0.8,6);
+                }
+                glEnable(GL_DEPTH_TEST);
+                glEnable(GL_BLEND);
+                glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glBindTexture(GL_TEXTURE_2D, texture.data);
                 glBegin(GL_QUADS);
                     glTexCoord2f(0.0, 0.0);
                     glVertex2f( -2.0,-2.0);
@@ -373,16 +398,16 @@ public:
                     glVertex2f(  2.0,-2.0);
                 glEnd();
             glDisable(GL_TEXTURE_2D);
-            if (tempo%4 < 1 && shoot){
+            if (tempo%40 < 20 && shoot){
                 rand_offset = (rand() % 5  ) - 2.5;
                 glPushMatrix();
                     glRotatef(rand_offset-86, 0, 0, 1);
                     glBegin(GL_POLYGON);
                         glColor4f(1, 1, 0, 1);
-                        glVertex2f( +0.88, -0.0);
-                        glVertex2f( +0.88, +100);
-                        glVertex2f( +0.95, +100);
-                        glVertex2f( +0.95, -0.0);
+                        glVertex2f( +1.10, -0.0);
+                        glVertex2f( +1.10, +100);
+                        glVertex2f( +1.15, +100);
+                        glVertex2f( +1.15, -0.0);
                     glEnd();
                 glPopMatrix();
             }
@@ -427,15 +452,47 @@ public:
     }
 };
 
+
+class GameObject{
+public:
+    Coordenada pos;
+    Textura tex;
+    Cor cor;
+    float altura, largura, angulo;
+
+    GameObject(Coordenada _pos, Textura _tex, Cor _cor, float _altura, float _largura, float _angulo){
+        pos = _pos;
+        tex = _tex;
+        cor = _cor;
+        altura = _altura;
+        largura = _largura;
+        angulo = _angulo;
+    }
+
+    void render(){
+        glPushMatrix();
+            glTranslatef(pos.x, pos.y , 0);
+            glRotatef(angulo-90, 0, 0, 1);
+            glBegin(GL_POLYGON);
+                glColor4f(cor.r, cor.g, cor.b, cor.a);
+                glVertex2f( largura/2,  altura/2);
+                glVertex2f( largura/2, -altura/2);
+                glVertex2f(-largura/2, -altura/2);
+                glVertex2f(-largura/2,  altura/2);
+            glEnd();
+        glPopMatrix();
+    }
+};
+
 // INICIALIZAÇÃO DOS OBJETOS E VARIÁVEIS
-Cor    CINZA(0.5,0.5,0.5);
-Cor VERMELHO(1.0,0.0,0.0);
-Cor    VERDE(0.0,1.0,0.0);
-Cor     AZUL(0.0,0.0,1.0);
-Cor  AMARELO(1.0,1.0,0.0);
-Cor    PRETO(0.0,0.0,0.0);
-Cor  LARANJA(1.0,0.6,0.3);
-Cor  BRANCO( 1.0,1.0,1.0);
+Cor    CINZA(0.5, 0.5, 0.5, 1.0);
+Cor VERMELHO(1.0, 0.0, 0.0, 1.0);
+Cor    VERDE(0.0, 1.0, 0.0, 1.0);
+Cor     AZUL(0.0, 0.0, 1.0, 1.0);
+Cor  AMARELO(1.0, 1.0, 0.0, 1.0);
+Cor    PRETO(0.0, 0.0, 0.0, 1.0);
+Cor  LARANJA(1.0, 0.6, 0.3, 1.0);
+Cor  BRANCO( 1.0, 1.0, 1.0, 1.0);
 //      Arma(  num, damage, rate, reload, cap, accuracy  )
 Arma    faca(  1,   20,     1,    0,       1,  0);
 Arma   glock(  1,   30,     3,    6,      11,  2);
@@ -445,7 +502,13 @@ Texto  texto("(0,0)", BRANCO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 Mira mira;
 
+Textura texturas[420];
 
+Coordenada origem(0,0);
+GameObject tiro(origem, texturas[0], BRANCO, 100, 0.1, 0);
+GameObject obstaculo_0(origem, texturas[0], BRANCO, 10, 10, 10);
+GameObject obstaculo_1(origem, texturas[0], BRANCO, 10, 10, 40);
+GameObject obstaculo_2(origem, texturas[0], BRANCO, 10, 10, -210);
 
 
 //################    ##################    ###################    ##################
@@ -467,17 +530,8 @@ void myDisplay(void){
 
     mira.render(player.pos.x, player.pos.y);
     texto.render(player.pos.x, player.pos.y);
-
-
-    glBegin(GL_POLYGON);
-    glColor4f(1, 1, 0, 1);
-    glVertex2f( -4, +2);
-    glVertex2f( -4, +4);
-    glVertex2f( +4, +4);
-    glVertex2f( +4, +2);
-    glEnd();
-    player.render();
-
+    player.render(texturas);
+    obstaculo_2.render();
 
     glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glutSwapBuffers();
@@ -485,11 +539,9 @@ void myDisplay(void){
 
 }
 
-void initTextures(){
+void loadTextures(){
     glClearColor(0,0,0,0);
-    glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_BLEND);
-    // glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
  
     std::string path = "./_player/";
     string path_string_array[420];
@@ -499,11 +551,11 @@ void initTextures(){
         for (auto & pp : fs::directory_iterator(p)){
             for (auto & ppp : fs::directory_iterator(pp)){
                 str_temp = ppp.path().string().c_str();
-                Textura teste(str_temp);
                 path_string_array[i] = ppp.path().string().c_str();
                 char *path_char_array_dos_inferno = new char[path_string_array[i].size()+1];
                 strncpy(path_char_array_dos_inferno, path_string_array[i].c_str(), path_string_array[i].size());
-                textures[i] = png_texture_load(path_char_array_dos_inferno, NULL, NULL);
+                // textures[i] = png_texture_load(path_char_array_dos_inferno, NULL, NULL);
+                texturas[i].set(png_texture_load(path_char_array_dos_inferno, NULL, NULL), str_temp);
                 i++;
             }
         }
@@ -516,18 +568,48 @@ void initTextures(){
 void myIdle(){
     tempo++;
     player.caminha();
-    if (tempo == 420*50)
+    if (tempo == 420*frame_time)
         tempo = 0;
 }
 
 void mouseClicks(int button, int state, int x, int y){
     mira.atualiza(x,y);
-    player.rotate(x, y);
+    player.rotate(x,y);
     player.shoot = state == GLUT_DOWN;
+    if (player.arma == "shotgun"){
+        player.animacao = "shotgun_shoot";
+        player.animacao_frames = 3;
+    }
+    if (player.arma == "handgun"){
+        player.animacao = "handgun_shoot";
+        player.animacao_frames = 3;
+    }
+    if (player.arma == "rifle"){
+        player.animacao = "rifle_shoot";
+        player.animacao_frames = 3;
+    }
+    if (player.arma == "knife"){
+        player.animacao = "knife_meleeattack";
+        player.animacao_frames = 15;
+    }
+    if (player.arma == "flashlight"){
+        player.animacao = "flashlight_meleeattack";
+        player.animacao_frames = 15;
+    }
 }
 
 void keyDown(unsigned char tecla, int x, int y){
     keyStates[tecla] = 1;
+    if(tecla == '1')
+        player.troca_arma("knife");
+    if(tecla == '2')
+        player.troca_arma("handgun");
+    if(tecla == '3')
+        player.troca_arma("shotgun");
+    if(tecla == '4')
+        player.troca_arma("rifle");
+    if(tecla == 'f' || tecla == 'F' )
+        player.troca_arma("flashlight");
 }
 
 void keyUp(unsigned char tecla, int x, int y){
@@ -581,7 +663,7 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);  // Inicializa o display mode
     glutCreateWindow("PNG texture");             // Inicializa a janaela
     initCallbacks();                             // Inicializa callbacks
-    initTextures();                              // Inicializa texturas
+    loadTextures();                              // Inicializa texturas
     initKeyboard();                              // Inicializa teclado
     initMouse();                                 // Inicializa mouse
     glutMainLoop();                              // Main loop
