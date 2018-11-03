@@ -190,41 +190,26 @@ GLuint png_texture_load(const char * file_name, int * width, int * height)
 
 
 
-
-
-
-
-
-
 // #####################      #####################      #####################    
 // #####################      #####################      #####################    
 // #####################      #####################      #####################    
 // #####################      #####################      #####################    
-
-
-
-
-
-
 
 
 
 class Coordenada {
-public:
+    public:
     float x, y;
     Coordenada(){}  
     Coordenada(float _x, float _y){
         x = _x;
         y = _y;
     }
-    void set(float p_x, float p_y){
-        x=p_x;
-        y=p_y;
-    }
+
 };
 
 class Cor {
-public:
+    public:
     float r, g, b, a;
     Cor(): r(0.0f), g(0.0f), b(0.0f), a(0.0f){ }
     Cor(float red ,float green ,float blue, float alpha): r(red), g(green), b(blue), a(alpha){ }
@@ -238,7 +223,7 @@ public:
 };
 
 class Texto {
-public:
+    public:
     string conteudo_texto;
     Cor cor;
 
@@ -264,7 +249,7 @@ public:
 };
 
 class Arma{
-public:
+    public:
     int num, damage, cap;
     float rate, reload, accuracy;
     Arma(int _damage, int _cap, int _num, float _rate, float _reload, float _accuracy){
@@ -278,7 +263,7 @@ public:
 };
 
 class Textura {
-public:
+    public:
     string animacao;
     int index;
     GLuint data;
@@ -323,7 +308,7 @@ public:
 };
 
 class Player {
-public:
+    public:
     Coordenada pos;
     Cor cor;   
     int num_segmentos, animacao_frames;
@@ -334,7 +319,7 @@ public:
 
     Player(float x, float y, float r, int seg, float angulo, Cor c){
         cor.set(c);
-        pos.set(x, y);
+        pos = Coordenada(x,y);
         num_segmentos=seg;
         inclinacao = angulo;
         raio = r;
@@ -418,7 +403,7 @@ public:
 };
 
 class Mira {
-public:
+    public:
     Coordenada pos;
 
     void atualiza(int x, int y){
@@ -435,7 +420,7 @@ public:
                     float theta = 2.0f * 3.1415926f * float(i) / float(30);
                     float cx = 0.5 * cosf(theta);
                     float cy = 0.5 * sinf(theta);
-                    glVertex2f(pos.x+cx + 0, pos.y+cy + 0);
+                    glVertex2f(pos.x + cx, pos.y + cy);
                 }
             glEnd();
 
@@ -445,16 +430,15 @@ public:
                     float theta = 2.0f * 3.1415926f * float(i) / float(30);
                     float cx = 0.1 * cosf(theta);
                     float cy = 0.1 * sinf(theta);
-                    glVertex2f(pos.x+cx + 0, pos.y+cy + 0);
+                    glVertex2f(pos.x + cx, pos.y + cy);
                 }
             glEnd();
         glPopMatrix();
     }
 };
 
-
 class GameObject{
-public:
+    public:
     Coordenada pos;
     Textura tex;
     Cor cor;
@@ -484,7 +468,7 @@ public:
     }
 };
 
-// INICIALIZAÇÃO DOS OBJETOS E VARIÁVEIS
+//       Cor(r, g, b, a)
 Cor    CINZA(0.5, 0.5, 0.5, 1.0);
 Cor VERMELHO(1.0, 0.0, 0.0, 1.0);
 Cor    VERDE(0.0, 1.0, 0.0, 1.0);
@@ -494,29 +478,28 @@ Cor    PRETO(0.0, 0.0, 0.0, 1.0);
 Cor  LARANJA(1.0, 0.6, 0.3, 1.0);
 Cor  BRANCO( 1.0, 1.0, 1.0, 1.0);
 //      Arma(  num, damage, rate, reload, cap, accuracy  )
-Arma    faca(  1,   20,     1,    0,       1,  0);
-Arma   glock(  1,   30,     3,    6,      11,  2);
-Arma    doze(  1,   100,    1,    8,       5,  6);
-Arma    ak47(  1,   40 ,    8,    3,      25,  3);
+Arma    faca(  1,   20,     1,    0,      1,   0         );
+Arma   glock(  1,   30,     3,    6,      11,  2         );
+Arma    doze(  1,   100,    1,    8,      5,   6         );
+Arma    ak47(  1,   40,     8,    3,      25,  3         );
+
 Texto  texto("(0,0)", BRANCO);
 Player player(0.0f, 0.0f, 10.0f, 100, 0, PRETO);
 Mira mira;
 
 Textura texturas[420];
-
 Coordenada origem(0,0);
-GameObject tiro(origem, texturas[0], BRANCO, 100, 0.1, 0);
-GameObject obstaculo_0(origem, texturas[0], BRANCO, 10, 10, 10);
-GameObject obstaculo_1(origem, texturas[0], BRANCO, 10, 10, 40);
-GameObject obstaculo_2(origem, texturas[0], BRANCO, 10, 10, -210);
+GameObject tiro(origem, texturas[0], AMARELO, 100, 0.1, 0);
+GameObject obstaculo_0(Coordenada(20,-40), texturas[0], PRETO, 10, 10, 10);
+GameObject obstaculo_1(Coordenada(-10,-30), texturas[0], PRETO, 10, 10, 40);
+GameObject obstaculo_2(Coordenada(-2,10), texturas[0], PRETO, 10, 10, -210);
+
 
 
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
-
-
 
 
 
@@ -531,18 +514,21 @@ void myDisplay(void){
     mira.render(player.pos.x, player.pos.y);
     texto.render(player.pos.x, player.pos.y);
     player.render(texturas);
+    obstaculo_0.render();
+    obstaculo_1.render();
     obstaculo_2.render();
 
     glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glutSwapBuffers();
     glutPostRedisplay();
-
 }
 
 void loadTextures(){
-    glClearColor(0,0,0,0);
+    glClearColor(1,1,1,1);
+    // glDepthMask(GL_FALSE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
- 
     std::string path = "./_player/";
     string path_string_array[420];
     string str_temp; 
@@ -613,6 +599,9 @@ void keyDown(unsigned char tecla, int x, int y){
 }
 
 void keyUp(unsigned char tecla, int x, int y){
+    //
+    //
+    //
     keyStates[tecla] = 0;
 }
 
@@ -660,7 +649,7 @@ int main(int argc, char** argv) {
     srand(time(NULL));
     glutInit(&argc, argv);                       // Inicializa GLUT
     glutInitWindowSize(screen_w, screen_h);      // Inicializa tamanho da janela
-    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);  // Inicializa o display mode
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH);  // Inicializa o display mode
     glutCreateWindow("PNG texture");             // Inicializa a janaela
     initCallbacks();                             // Inicializa callbacks
     loadTextures();                              // Inicializa texturas
