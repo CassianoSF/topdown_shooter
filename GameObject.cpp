@@ -1,4 +1,3 @@
-
 class GameObject{
     public:
     Coordinate pos;

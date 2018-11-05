@@ -1,4 +1,3 @@
-
 class Text {
     public:
     string text_content;

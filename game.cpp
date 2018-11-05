@@ -1,8 +1,3 @@
-
-
-
-
-
 int* keyStates = new int[256];
 int screen_w = 1000;
 int screen_h = 700;
@@ -18,12 +13,12 @@ Color  AMARELO(1.0, 1.0, 0.0, 1.0);
 Color    PRETO(0.0, 0.0, 0.0, 1.0);
 Color  LARANJA(1.0, 0.6, 0.3, 1.0);
 Color  BRANCO( 1.0, 1.0, 1.0, 1.0);
-//          Arma(bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
+//         Arma( bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
 Arma flashlight( false,        "flashlight", 1,           40,       1,        1,         1,                1         );
 Arma      knife( false,        "knife",      1,           20,       2,        1,         1,                1         );
-Arma    handgun( true,         "handgun",    1,           30,       3,        10,        3000,             2         );
-Arma    shotgun( true,         "shotgun",    1,           100,      4,        10,        7000,             6         );
-Arma      rifle( true,         "rifle",      1,           40,       5,        2,         4000,             3         );
+Arma    handgun( true,         "handgun",    1,           30,       3,        100,       3000,             2         );
+Arma    shotgun( true,         "shotgun",    1,           100,      4,        200,       7000,             6         );
+Arma      rifle( true,         "rifle",      1,           40,       5,        10,        4000,             3         );
 
 Text  texto("(0,0)", BRANCO);
 Mira mira;
@@ -127,7 +122,7 @@ void myIdle(){
     game_time++;
     player.update(game_time);
     player.caminha(keyStates);
-    if (game_time == 421*frame_time)
+    if (game_time == 421*frame_time*10)
         game_time = 0;
 }
 
@@ -139,10 +134,10 @@ void mouseClicks(int button, int state, int x, int y){
             player.shoot = true;
             player.rand_offset = (rand() % player.arma.accuracy) - 2.5;
             player.shoot_left = 3 * frame_time;
+            game_time = 0;
         }else{
             player.shoot = false;
         }
-        game_time = 0;
     }
     if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
         player.attack = true;
@@ -162,16 +157,26 @@ void keyDown(unsigned char tecla, int x, int y){
         player.shoot = false;
         player.attack = false;
     }
-    if(tecla == '1')
+    if(tecla == '1'){
         player.arma = knife;
-    if(tecla == '2')
+        player.reload = false;
+    }
+    if(tecla == '2'){
         player.arma = handgun;
-    if(tecla == '3')
+        player.reload = false;
+    }
+    if(tecla == '3'){
         player.arma = shotgun;
-    if(tecla == '4')
+        player.reload = false;
+    }
+    if(tecla == '4'){
         player.arma = rifle;
-    if(tecla == 'f' || tecla == 'F' )
+        player.reload = false;
+    }
+    if(tecla == 'f' || tecla == 'F' ){
         player.arma = flashlight;
+        player.reload = false;
+    }
 
     if (keyStates['a'] + keyStates['s'] + keyStates['d'] + keyStates['w'] + keyStates['A'] + keyStates['S'] + keyStates['D'] + keyStates['W']){
         player.idle = false;

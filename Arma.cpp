@@ -1,4 +1,3 @@
-
 class Arma{
     public:
     string name;

@@ -1,4 +1,3 @@
-
 class Player {
     public:
     Coordinate pos;
@@ -40,10 +39,10 @@ class Player {
             reload = !(reload_left == 1);
 
         }else if (shoot && arma.shoot){
-            shoot_left--;
+            // shoot_left--;
             animation_frames = 3;
             ss << arma.name << "_" << "shoot";
-            shoot = !(shoot_left == 1);
+            // shoot = !(shoot_left == 1);
 
         }else if(walk || run){
             if (run){
@@ -92,32 +91,32 @@ class Player {
     }
 
     void renderTiro(Texture textures[421], int game_time, int frame_time){
-        if (shoot && arma.shoot && !reload && (game_time / frame_time) % arma.rate == 1){
-            glPushMatrix();
-                for (int i = 0; i < 421; ++i){
-                    if(textures[i].animation == "shoot_texture")
-                        textures[i].render();
-                }
-                glBegin(GL_QUADS);
-                    glTexCoord2f(0.0, 0.0);
-                    glVertex2f(  1.3,-3.1);
-                    glTexCoord2f(0.0, 1.0);
-                    glVertex2f(  1.3, 0.9);
-                    glTexCoord2f(1.0, 1.0);
-                    glVertex2f(  5.3, 0.9);
-                    glTexCoord2f(1.0, 0.0);
-                    glVertex2f(  5.3,-3.1);
-                glEnd();
-                glDisable(GL_TEXTURE_2D);
-                glRotatef(rand_offset-86, 0, 0, 1);
-                glBegin(GL_POLYGON);
-                    glColor4f(1, 1, 0, 1);
-                    glVertex2f( +1.03, -0.0);
-                    glVertex2f( +1.03, +100);
-                    glVertex2f( +1.08, +100);
-                    glVertex2f( +1.08, -0.0);
-                glEnd();
-            glPopMatrix();
+        if (shoot && arma.shoot && !reload && game_time/arma.rate % (frame_time/10) == 0){
+            // glPushMatrix();
+            //     glRotatef(rand_offset-86, 0, 0, 1);
+            //     glBegin(GL_POLYGON);
+            //         glColor4f(1, 1, 0, 1);
+            //         glVertex2f( +1.03, -0.0);
+            //         glVertex2f( +1.03, +100);
+            //         glVertex2f( +1.08, +100);
+            //         glVertex2f( +1.08, -0.0);
+            //     glEnd();
+            // glPopMatrix();
+            for (int i = 0; i < 421; ++i){
+                if(textures[i].animation == "shoot_texture")
+                    textures[i].render();
+            }
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0, 0.0);
+                glVertex2f(  1.3,-3.1);
+                glTexCoord2f(0.0, 1.0);
+                glVertex2f(  1.3, 0.9);
+                glTexCoord2f(1.0, 1.0);
+                glVertex2f(  5.3, 0.9);
+                glTexCoord2f(1.0, 0.0);
+                glVertex2f(  5.3,-3.1);
+            glEnd();
+            glDisable(GL_TEXTURE_2D);
         }
     }
 
