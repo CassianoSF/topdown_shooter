@@ -1,14 +1,23 @@
-// This one file (png_texture.cpp) is free and unencumbered software
-// released into the public domain.
+#define GLFW_INCLUDE_ES2
+#include <GL/glut.h>  
 #include <stdio.h>
 #include <stdlib.h> 
+#include <sstream> 
+#include <iostream>
+#include <string>
+#include <math.h>
+#include <time.h>
+#include <png.h>
 #include <GL/gl.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <png.h>
+#include <vector>
+#include <algorithm>
+#include <GLFW/glfw3.h>
+#include <experimental/filesystem>
+#include <regex>
 
-GLuint png_texture_load(const char * file_name, int * width, int * height)
-{
+static GLuint png_texture_load(const char * file_name, int * width, int * height){
     // This function was originally written by David Grayson for
     // https://github.com/DavidEGrayson/ahrs-visualizer
 
@@ -153,10 +162,8 @@ GLuint png_texture_load(const char * file_name, int * width, int * height)
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, format, temp_width, temp_height, 0, format, GL_UNSIGNED_BYTE, image_data);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // clean up
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
