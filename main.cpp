@@ -19,3 +19,14 @@
 
 namespace fs = std::experimental::filesystem;
 using namespace std;
+
+#include "load_png.cpp"
+#include "Coordinate.cpp"
+#include "Color.cpp"
+#include "Texture.cpp"
+#include "Text.cpp"
+#include "Arma.cpp"
+#include "Mira.cpp"
+#include "Player.cpp"
+#include "GameObject.cpp"
+#include "game.cpp"

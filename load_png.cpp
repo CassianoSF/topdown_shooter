@@ -1,5 +1,3 @@
-#include "includes.cpp"  
-
 
 static GLuint png_texture_load(const char * file_name, int * width, int * height){
     // This function was originally written by David Grayson for
