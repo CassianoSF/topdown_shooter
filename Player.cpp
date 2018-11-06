@@ -10,7 +10,6 @@ class Player {
     string animation, pernas;
     Arma arma;
 
-
     bool shoot=false, 
          idle=true, 
          walk=false, 

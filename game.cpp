@@ -75,13 +75,14 @@ void updateGame(){
     
     if (time_flag != game_clock / frame_time){
         time_flag = game_clock / frame_time;
-            cout << game_clock / frame_time << endl;
+        cout << game_clock / frame_time << endl;
     }
 }
 
 void keyDown(unsigned char tecla, int x, int y){
     player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
     keyStates[tecla] = 1;
+    
     if(tecla == 'r' || tecla == 'R'){
         player.reload = true;
         player.reload_left = player.arma.reload_time;
@@ -244,7 +245,7 @@ void initCallbacks(){
 void initKeyboard(){
     glutKeyboardFunc(keyDown);                  // Callback ao pressionar tecla
     glutKeyboardUpFunc(keyUp);                  // Callback ao soltar tecla
-    glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);      // Desativa reperição de tecla
+    // glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);      // Desativa reperição de tecla
 }
 
 void initMouse(){
