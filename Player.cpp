@@ -28,7 +28,7 @@ class Player {
     }
 
     void hundleKeyDown(char key){
-        run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
+        run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT && walk);
         if(key == 'r' || key == 'R'){
             actionReload();
         }
@@ -39,6 +39,7 @@ class Player {
                 actionChangeItem(i);
             }
         }
+        string moveKeys = "asdwASDW";
     }
 
     void actionChangeItem(int num){
@@ -95,8 +96,11 @@ class Player {
                     keyStates['W'] + keyStates['S'] + keyStates['A'] + keyStates['D']);
         if(move){
             walk = true;
+            idle = false;
         }else{
             walk = false;
+            run = false;
+            idle = true;
         }
         if (move > 1){
             velocidade = 0.7*speed_mult;

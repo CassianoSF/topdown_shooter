@@ -87,14 +87,6 @@ void keyDown(unsigned char tecla, int x, int y){
 
     player.hundleKeyDown(tecla);
 
-
-    if (keyStates['a'] + keyStates['s'] + keyStates['d'] + keyStates['w'] + keyStates['A'] + keyStates['S'] + keyStates['D'] + keyStates['W']){
-        player.idle = false;
-    }else{
-        player.run = false;
-        player.walk = false;
-        player.idle = true;
-    }
 }
 
 void keyUp(unsigned char tecla, int x, int y){
