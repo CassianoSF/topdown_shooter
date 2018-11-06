@@ -15,8 +15,8 @@ class Zombie{
 		animation = "skeleton_idle";
 	}
 	void update(int game_clock, int frame_time, Player player){
-		pos.x = pos.x + cosf(player.pos.x - pos.x);
-		pos.y = pos.y + sinf(player.pos.y - pos.y);
+		pos.x = pos.x + 0.01*cosf(player.pos.x - pos.x);
+		pos.y = pos.y + 0.01*sinf(player.pos.y - pos.y);
 		if (attack){
 			animation = "skeleton_attack";
 
