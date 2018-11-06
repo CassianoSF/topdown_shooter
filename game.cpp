@@ -25,6 +25,8 @@ Arma    handgun( true,         "handgun",    1,           30,       3,        10
 Arma    shotgun( true,         "shotgun",    1,           100,      4,        200,       7000,             6         );
 Arma      rifle( true,         "rifle",      1,           40,       5,        10,        4000,             3         );
 
+Arma inventory[5] = { flashlight, knife, handgun, shotgun, rifle };
+
 Text  texto("(0,0)", BRANCO);
 Mira mira;
 
@@ -35,7 +37,7 @@ GameObject obstaculo_0(Coordinate(20,-40), textures[0], VERDE, 10, 10, 10);
 GameObject obstaculo_1(Coordinate(-10,-30), textures[0], VERDE, 10, 10, 40);
 GameObject obstaculo_2(Coordinate(-2,10), textures[0], VERDE, 10, 10, -210);
 
-Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO);
+Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
 
 
 //################    ##################    ###################    ##################
@@ -80,32 +82,11 @@ void updateGame(){
 }
 
 void keyDown(unsigned char tecla, int x, int y){
-    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
+    
     keyStates[tecla] = 1;
 
-    if(tecla == 'r' || tecla == 'R'){
-        player.actionReload();
-    }
-    if(tecla == '1'){
-        player.arma = knife;
-        player.reload = false;
-    }
-    if(tecla == '2'){
-        player.arma = handgun;
-        player.reload = false;
-    }
-    if(tecla == '3'){
-        player.arma = shotgun;
-        player.reload = false;
-    }
-    if(tecla == '4'){
-        player.arma = rifle;
-        player.reload = false;
-    }
-    if(tecla == 'f' || tecla == 'F' ){
-        player.arma = flashlight;
-        player.reload = false;
-    }
+    player.hundleKeyDown(tecla);
+
 
     if (keyStates['a'] + keyStates['s'] + keyStates['d'] + keyStates['w'] + keyStates['A'] + keyStates['S'] + keyStates['D'] + keyStates['W']){
         player.idle = false;

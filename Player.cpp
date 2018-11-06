@@ -5,10 +5,10 @@ class Player {
     int animation_frames;
     int reload_left;
     int shoot_left;
-    float rand_offset;
-    float raio, inclinacao;
+    float rand_offset, inclinacao;
     string animation, pernas;
     Arma arma;
+    Arma inventory[5];
 
     bool shoot=false, 
          idle=true, 
@@ -17,12 +17,33 @@ class Player {
          reload=false, 
          attack=false;
 
-    Player(Arma _arma, float x, float y, float r, float angle, Color c){
+    Player(Arma _arma, float x, float y, float r, float angle, Color c, Arma _inventory[5]){
         color.set(c);
         pos = Coordinate(x,y);
         inclinacao = angle;
-        raio = r;
         arma = _arma;
+        for (int i = 0; i < 5; ++i){
+            inventory[i] = _inventory[i];
+        }
+    }
+
+    void hundleKeyDown(char key){
+        run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
+        if(key == 'r' || key == 'R'){
+            actionReload();
+        }
+        string itemKeys = "f1234F";
+        for(int i=0 ; i<5 ; i++) {
+            if(key == itemKeys[i]){
+                if (i==5){actionChangeItem(0);}
+                actionChangeItem(i);
+            }
+        }
+    }
+
+    void actionChangeItem(int num){
+        arma = inventory[num];
+        reload = false;
     }
 
     void actionReload(){
