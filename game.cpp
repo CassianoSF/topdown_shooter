@@ -6,6 +6,9 @@ int frame_time = 100;          // divisor do clock (frame window)
 int time_flag = 0;             // flag de atualização
 
 
+// MODELS
+
+
 //       Color(r, g, b, a)
 Color    CINZA(0.5, 0.5, 0.5, 1.0);
 Color VERMELHO(1.0, 0.0, 0.0, 1.0);
@@ -64,35 +67,15 @@ void renderGame(void){
 void updateGame(){
     game_clock++;
     player.caminha(keyStates);
-    if (time_flag != game_clock / frame_time){
-        time_flag = game_clock / frame_time;
-        cout << game_clock / frame_time << endl;
-        player.update(game_clock);
-        // zombie.update(game_clock, player);
-    }
+    player.update(game_clock);
+    // zombie.update(game_clock, player);
     if (game_clock == (421+43)*10000){
         game_clock = 0;
     }
-}
-
-void mouseClicks(int button, int state, int x, int y){
-    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
-    player.rotate(x,y);
-    if(!player.reload){
-        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-            player.shoot = true;
-            player.rand_offset = (rand() % player.arma.accuracy) - 2.5;
-            player.shoot_left = 3 * frame_time;
-            game_clock = 0;
-        }else{
-            player.shoot = false;
-        }
-    }
-    if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
-        player.attack = true;
-        game_clock = 0;
-    }else{
-        player.attack = false;
+    
+    if (time_flag != game_clock / frame_time){
+        time_flag = game_clock / frame_time;
+            cout << game_clock / frame_time << endl;
     }
 }
 
@@ -150,6 +133,27 @@ void keyUp(unsigned char tecla, int x, int y){
         player.idle = true;
     }
 
+}
+
+void mouseClick(int button, int state, int x, int y){
+    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
+    player.rotate(x,y);
+    if(!player.reload){
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+            player.shoot = true;
+            player.rand_offset = (rand() % player.arma.accuracy) - 2.5;
+            player.shoot_left = 3 * frame_time;
+            game_clock = 0;
+        }else{
+            player.shoot = false;
+        }
+    }
+    if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
+        player.attack = true;
+        game_clock = 0;
+    }else{
+        player.attack = false;
+    }
 }
 
 void mouseMove(int x, int y){
@@ -245,7 +249,7 @@ void initKeyboard(){
 
 void initMouse(){
     glutPassiveMotionFunc(mouseMove);            // Callback do cursor movendo 
-    glutMouseFunc(mouseClicks);                  // Callback do click
+    glutMouseFunc(mouseClick);                  // Callback do click
     glutMotionFunc(mouseDrag);                   // Callback do drag
     glutSetCursor(GLUT_CURSOR_NONE);             // Esconde cursor
 }
