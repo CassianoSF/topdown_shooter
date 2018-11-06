@@ -81,29 +81,14 @@ void updateGame(){
     }
 }
 
-void keyDown(unsigned char tecla, int x, int y){
-    
-    keyStates[tecla] = 1;
-
-    player.hundleKeyDown(tecla);
-
+void keyDown(unsigned char key, int x, int y){
+    keyStates[key] = 1;
+    player.hundleKeyDown(key);
 }
 
-void keyUp(unsigned char tecla, int x, int y){
-    keyStates[tecla] = 0;
-    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
-    if (tecla == 'a' || tecla == 'A'){ keyStates['a'] = 0; keyStates['A'] = 0;}
-    if (tecla == 's' || tecla == 'S'){ keyStates['s'] = 0; keyStates['S'] = 0;}
-    if (tecla == 'd' || tecla == 'D'){ keyStates['d'] = 0; keyStates['D'] = 0;}
-    if (tecla == 'w' || tecla == 'W'){ keyStates['w'] = 0; keyStates['W'] = 0;}
-    if (keyStates['a'] + keyStates['s'] + keyStates['d'] + keyStates['w'] + keyStates['A'] + keyStates['S'] + keyStates['D'] + keyStates['W']){
-        player.idle = false;
-    }else{
-        player.run = false;
-        player.walk = false;
-        player.idle = true;
-    }
-
+void keyUp(unsigned char key, int x, int y){
+    keyStates[key] = 0;
+    player.hundleKeyUp(keyStates, key);
 }
 
 void mouseClick(int button, int state, int x, int y){

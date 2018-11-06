@@ -42,6 +42,20 @@ class Player {
         string moveKeys = "asdwASDW";
     }
 
+    void hundleKeyUp(int keyStates[256], char key){
+        if (key == 'a' || key == 'A'){ keyStates['a'] = 0; keyStates['A'] = 0;}
+        if (key == 's' || key == 'S'){ keyStates['s'] = 0; keyStates['S'] = 0;}
+        if (key == 'd' || key == 'D'){ keyStates['d'] = 0; keyStates['D'] = 0;}
+        if (key == 'w' || key == 'W'){ keyStates['w'] = 0; keyStates['W'] = 0;}
+        if (keyStates['a'] + keyStates['s'] + keyStates['d'] + keyStates['w'] + keyStates['A'] + keyStates['S'] + keyStates['D'] + keyStates['W']){
+            idle = false;
+        }else{
+            run = false;
+            walk = false;
+            idle = true;
+        }
+    }
+
     void actionChangeItem(int num){
         arma = inventory[num];
         reload = false;
