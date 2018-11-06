@@ -38,7 +38,7 @@ GameObject obstaculo_1(Coordinate(-10,-30), textures[0], VERDE, 10, 10, 40);
 GameObject obstaculo_2(Coordinate(-2,10), textures[0], VERDE, 10, 10, -210);
 
 Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
-
+Zombie zombie(4,4,100,50);
 
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
@@ -60,7 +60,7 @@ void renderGame(void){
     obstaculo_1.render();
     obstaculo_2.render();
     player.render(textures, game_clock, frame_time);
-
+    zombie.render(textures, game_clock, frame_time);
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
     glutSwapBuffers();
@@ -71,7 +71,7 @@ void updateGame(){
     game_clock++;
     player.caminha(keyStates);
     player.update(game_clock, frame_time);
-    // zombie.update(game_clock, player);
+    zombie.update(game_clock, frame_time, player);
     if (game_clock == (421+43)*10000){
         game_clock = 0;
     }
@@ -161,6 +161,10 @@ void loadTextures(){
                 regex_search(str_filename, m, regex("shotgun/shoot"));          for(auto v: m){textures[i].animation = "shotgun_shoot";} 
                 regex_search(str_filename, m, regex("shotgun/reload"));         for(auto v: m){textures[i].animation = "shotgun_reload";} 
                 regex_search(str_filename, m, regex("shotgun/idle"));           for(auto v: m){textures[i].animation = "shotgun_idle";} 
+                
+                regex_search(str_filename, m, regex("skeleton-idle"));          for(auto v: m){textures[i].animation = "skeleton_idle";} 
+                regex_search(str_filename, m, regex("skeleton-attack"));        for(auto v: m){textures[i].animation = "skeleton_attack";} 
+                regex_search(str_filename, m, regex("skeleton-move"));          for(auto v: m){textures[i].animation = "skeleton_move";} 
                 cout << "Loading...  " << str_filename << endl;
                 i++;
             }

@@ -28,5 +28,6 @@ using namespace std;
 #include "Arma.cpp"
 #include "Mira.cpp"
 #include "Player.cpp"
+#include "Zombie.cpp"
 #include "GameObject.cpp"
 #include "game.cpp"

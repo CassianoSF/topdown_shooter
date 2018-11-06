@@ -75,7 +75,7 @@ class Player {
     void actionShoot(){
         shoot = true;
         rand_offset = (rand() % arma.accuracy) - 2.5;
-        }
+    }
 
     void actionChangeItem(int num){
         arma = inventory[num];
@@ -161,19 +161,19 @@ class Player {
         } 
     }
 
-    void renderTiro(Texture textures[421], int game_time, int frame_time){
+    void renderTiro(Texture textures[421+43], int game_time, int frame_time){
         if (shoot && !reload && game_time/arma.rate % (frame_time/10) == 0){
-            // glPushMatrix();
-            //     glRotatef(rand_offset-86, 0, 0, 1);
-            //     glBegin(GL_POLYGON);
-            //         glColor4f(1, 1, 0, 1);
-            //         glVertex2f( +1.03, -0.0);
-            //         glVertex2f( +1.03, +100);
-            //         glVertex2f( +1.08, +100);
-            //         glVertex2f( +1.08, -0.0);
-            //     glEnd();
-            // glPopMatrix();
-            for (int i = 0; i < 421; ++i){
+            glPushMatrix();
+                glRotatef(rand_offset-86, 0, 0, 1);
+                glBegin(GL_POLYGON);
+                    glColor4f(1, 1, 0, 1);
+                    glVertex2f( +1.03, -0.0);
+                    glVertex2f( +1.03, +100);
+                    glVertex2f( +1.08, +100);
+                    glVertex2f( +1.08, -0.0);
+                glEnd();
+            glPopMatrix();
+            for (int i = 0; i < 421+43; ++i){
                 if(textures[i].animation == "shoot_texture")
                     textures[i].render();
             }
@@ -191,9 +191,9 @@ class Player {
         }
     }
 
-    void renderBody(Texture textures[421], int game_time, int frame_time){
+    void renderBody(Texture textures[421+43], int game_time, int frame_time){
         Texture texture;
-        for (int i = 0; i < 421; ++i){
+        for (int i = 0; i < 421+43; ++i){
             if(textures[i].animation == animation && textures[i].index == (game_time / frame_time) % animation_frames)
                 textures[i].render();
         }
@@ -211,11 +211,11 @@ class Player {
 
     }
 
-    void renderLegs(Texture textures[421], int game_time, int frame_time){
+    void renderLegs(Texture textures[421+43], int game_time, int frame_time){
         glPushMatrix();
             glTranslatef(-0.3, -0.2, -10.0);
             Texture texture;
-            for (int i = 0; i < 421; ++i){
+            for (int i = 0; i < 421+43; ++i){
                 if(idle && textures[i].animation == "feet_idle")
                     textures[i].render();
                 else if(textures[i].animation == pernas && textures[i].index == (game_time / frame_time) % 20)
@@ -235,7 +235,7 @@ class Player {
         glPopMatrix();
     }
 
-    void render(Texture textures[421], int game_time, int frame_time){
+    void render(Texture textures[421+43], int game_time, int frame_time){
         glPushMatrix();
             glTranslatef(pos.x, pos.y, 0);
             glRotatef(inclinacao, 0, 0, 1);

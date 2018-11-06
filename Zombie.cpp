@@ -12,8 +12,10 @@ class Zombie{
 		life = _life;
 		angle = _angle;
 		idle = true;
+		animation = "skeleton_idle";
 	}
-	void update(int game_clock, Player player){
+	void update(int game_clock, int frame_time, Player player){
+
 		if (attack){
 			animation = "skeleton_attack";
 
