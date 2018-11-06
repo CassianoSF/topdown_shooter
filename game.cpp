@@ -99,14 +99,12 @@ void mouseClick(int button, int state, int x, int y){
             player.shoot = true;
             player.rand_offset = (rand() % player.arma.accuracy) - 2.5;
             player.shoot_left = 3 * frame_time;
-            game_clock = 0;
         }else{
             player.shoot = false;
         }
     }
     if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
         player.attack = true;
-        game_clock = 0;
     }else{
         player.attack = false;
     }
@@ -114,8 +112,8 @@ void mouseClick(int button, int state, int x, int y){
 
 void mouseMove(int x, int y){
     player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
-    mira.update(x,y);
     player.rotate(x,y);
+    mira.update(x,y);
     char temp[100];
     sprintf(temp, " (%d, %d)  %f", x, y, player.inclinacao);
     texto.set_texto(temp);

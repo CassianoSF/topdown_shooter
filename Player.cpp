@@ -22,6 +22,7 @@ class Player {
         pos = Coordinate(x,y);
         inclinacao = angle;
         arma = _arma;
+        pernas = "feet_idle";
         for (int i = 0; i < 5; ++i){
             inventory[i] = _inventory[i];
         }
@@ -62,8 +63,8 @@ class Player {
     }
 
     void actionReload(){
-        reload = true;
         reload_left = arma.reload_time;
+        reload = true;
         shoot = false;
         attack = false;
     }
