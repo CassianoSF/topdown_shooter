@@ -47,13 +47,13 @@ Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
 
 
 
+// REDERIZAÇÃO
 void renderGame(void){
-    // REDERIZAÇÃO
-    glLoadIdentity();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glTranslatef(-player.pos.x, -player.pos.y, -35);
-    glRotatef(0, 1, 1, 1);
+    glLoadIdentity();                                     // Reseta matiz
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);   // Limpa o buffer de cores
+    glTranslatef(-player.pos.x, -player.pos.y, -35);      // Posiciona o senário deslocado da camera
 
+    // Renderiza objetos
     mira.render(player.pos.x, player.pos.y);
     texto.render(player.pos.x, player.pos.y);
     obstaculo_0.render();
@@ -61,7 +61,8 @@ void renderGame(void){
     obstaculo_2.render();
     player.render(textures, game_clock, frame_time);
 
-    glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
+    // Requisita que o buffer usado para as operações de renderização seja exibido na tela
+    glFlush();  
     glutSwapBuffers();
     glutPostRedisplay();
 }
@@ -69,7 +70,7 @@ void renderGame(void){
 void updateGame(){
     game_clock++;
     player.caminha(keyStates);
-    player.update(game_clock);
+    player.update(game_clock, frame_time);
     // zombie.update(game_clock, player);
     if (game_clock == (421+43)*10000){
         game_clock = 0;
@@ -94,20 +95,7 @@ void keyUp(unsigned char key, int x, int y){
 void mouseClick(int button, int state, int x, int y){
     player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
     player.rotate(x,y);
-    if(!player.reload){
-        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-            player.shoot = true;
-            player.rand_offset = (rand() % player.arma.accuracy) - 2.5;
-            player.shoot_left = 3 * frame_time;
-        }else{
-            player.shoot = false;
-        }
-    }
-    if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
-        player.attack = true;
-    }else{
-        player.attack = false;
-    }
+    player.hundleMouseClick(button, state);
 }
 
 void mouseMove(int x, int y){

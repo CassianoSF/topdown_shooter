@@ -29,7 +29,7 @@ class Player {
     }
 
     void hundleKeyDown(char key){
-        run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT && walk);
+        run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT );
         if(key == 'r' || key == 'R'){
             actionReload();
         }
@@ -56,6 +56,26 @@ class Player {
             idle = true;
         }
     }
+    
+    void hundleMouseClick(int button, int state){
+        if(!reload && arma.shoot){
+            if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+                actionShoot();
+            }else{
+                shoot = false;
+            }
+        }
+        if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
+            attack = true;
+        }else{
+            attack = false;
+        }
+    }
+
+    void actionShoot(){
+        shoot = true;
+        rand_offset = (rand() % arma.accuracy) - 2.5;
+        }
 
     void actionChangeItem(int num){
         arma = inventory[num];
@@ -69,35 +89,40 @@ class Player {
         attack = false;
     }
 
-    void update(int game_time){
+    void update(int game_time, int frame_time){
         stringstream ss;
 
         if(attack){
             animation_frames = 15;
             ss << arma.name << "_" << "meleeattack";
+
         }else if (reload && arma.reload_time && reload_left){
             reload_left--;
             animation_frames = 15;
             ss << arma.name << "_" << "reload";
             reload = !(reload_left == 1);
 
-        }else if (shoot && arma.shoot){
-            // shoot_left--;
+        }else if (shoot && game_time/arma.rate % (frame_time/10) == 0){
             animation_frames = 3;
             ss << arma.name << "_" << "shoot";
-            // shoot = !(shoot_left == 1);
 
         }else if(walk || run){
-            if (run){
-                pernas = "feet_run";
-            }else
-                pernas = "feet_walk";
-
             animation_frames = 20;
             ss << arma.name << "_" << "move";
+        
         }else if(idle){
             ss << arma.name << "_" << "idle";
             animation_frames = 20;
+        }
+
+        if(walk || run){
+            if (run){
+                pernas = "feet_run";
+            }else{
+                pernas = "feet_walk";
+            }
+        }else{
+            pernas="feet_idle";
         }
         animation = ss.str();
     }
@@ -137,7 +162,7 @@ class Player {
     }
 
     void renderTiro(Texture textures[421], int game_time, int frame_time){
-        if (shoot && arma.shoot && !reload && game_time/arma.rate % (frame_time/10) == 0){
+        if (shoot && !reload && game_time/arma.rate % (frame_time/10) == 0){
             // glPushMatrix();
             //     glRotatef(rand_offset-86, 0, 0, 1);
             //     glBegin(GL_POLYGON);
