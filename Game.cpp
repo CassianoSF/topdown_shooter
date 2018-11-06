@@ -1,8 +1,9 @@
-int* keyStates = new int[256];
-int screen_w = 1000;
-int screen_h = 700;
-int game_time = 0;
-int frame_time = 100;
+int* keyStates = new int[256]; // Estado das teclas 0 e 1
+int screen_w = 1000;           // largura da tela
+int screen_h = 700;            // altura da tela
+int game_clock = 0;            // incrementa com o loop principal
+int frame_time = 100;          // divisor do clock
+int time_flag = 0;             //
 
 //       Color(r, g, b, a)
 Color    CINZA(0.5, 0.5, 0.5, 1.0);
@@ -13,24 +14,27 @@ Color  AMARELO(1.0, 1.0, 0.0, 1.0);
 Color    PRETO(0.0, 0.0, 0.0, 1.0);
 Color  LARANJA(1.0, 0.6, 0.3, 1.0);
 Color  BRANCO( 1.0, 1.0, 1.0, 1.0);
-//         Arma( bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
-Arma flashlight( false,        "flashlight", 1,           40,       1,        1,         1,                1         );
-Arma      knife( false,        "knife",      1,           20,       2,        1,         1,                1         );
-Arma    handgun( true,         "handgun",    1,           30,       3,        100,       3000,             2         );
-Arma    shotgun( true,         "shotgun",    1,           100,      4,        200,       7000,             6         );
-Arma      rifle( true,         "rifle",      1,           40,       5,        10,        4000,             3         );
-
+//         Item( bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
+Item flashlight( false,        "flashlight", 1,           40,       1,        1,         1,                1         );
+Item      knife( false,        "knife",      1,           20,       2,        1,         1,                1         );
+Item    handgun( true,         "handgun",    1,           30,       3,        100,       3000,             2         );
+Item    shotgun( true,         "shotgun",    1,           100,      4,        200,       7000,             6         );
+Item      rifle( true,         "rifle",      1,           40,       5,        10,        4000,             3         );
+Item inventory[5] = {flashlight,knife,handgun,shotgun,rifle};
 Text  texto("(0,0)", BRANCO);
 Mira mira;
 
-Texture textures[(421+43)];
+Texture textures[421+43];
 Coordinate origem(0,0);
 GameObject tiro(origem, textures[0], AMARELO, 100, 0.1, 0);
 GameObject obstaculo_0(Coordinate(20,-40), textures[0], VERDE, 10, 10, 10);
 GameObject obstaculo_1(Coordinate(-10,-30), textures[0], VERDE, 10, 10, 40);
 GameObject obstaculo_2(Coordinate(-2,10), textures[0], VERDE, 10, 10, -210);
 
-Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO);
+Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
+
+
+Zombie zombie(2, 2, 100, 0);
 
 
 //################    ##################    ###################    ##################
@@ -41,6 +45,7 @@ Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO);
 
 
 void myDisplay(void){
+
     // REDERIZAÇÃO
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -53,7 +58,8 @@ void myDisplay(void){
     obstaculo_0.render();
     obstaculo_1.render();
     obstaculo_2.render();
-    player.render(textures, game_time, frame_time);
+    zombie.render(textures, game_clock, frame_time);
+    player.render(textures, game_clock, frame_time);
 
     glFlush();  // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glutSwapBuffers();
@@ -65,7 +71,7 @@ void loadTextures(){
     // glDepthMask(GL_FALSE);
 
     std::string path = "./_player/";
-    string path_string_array[(421+43)];
+    string path_string_array[421+43];
     string str_filename; 
     int i = 0;
     for (auto & p : fs::directory_iterator(path)){
@@ -111,6 +117,10 @@ void loadTextures(){
                 regex_search(str_filename, m, regex("shotgun/shoot"));          for(auto v: m){textures[i].animation = "shotgun_shoot";} 
                 regex_search(str_filename, m, regex("shotgun/reload"));         for(auto v: m){textures[i].animation = "shotgun_reload";} 
                 regex_search(str_filename, m, regex("shotgun/idle"));           for(auto v: m){textures[i].animation = "shotgun_idle";} 
+                
+                regex_search(str_filename, m, regex("skeleton-attack"));        for(auto v: m){textures[i].animation = "skeleton_attack";} 
+                regex_search(str_filename, m, regex("skeleton-idle"));          for(auto v: m){textures[i].animation = "skeleton_idle";} 
+                regex_search(str_filename, m, regex("skeleton-move"));          for(auto v: m){textures[i].animation = "skeleton_move";} 
                 cout << "Loading...  " << str_filename << endl;
                 i++;
             }
@@ -119,11 +129,16 @@ void loadTextures(){
 }
 
 void myIdle(){
-    game_time++;
-    player.update(game_time);
+    game_clock++;
     player.caminha(keyStates);
-    if (game_time == (421+43)*frame_time*10)
-        game_time = 0;
+    if (time_flag != game_clock / frame_time){
+        time_flag = game_clock / frame_time;
+        cout << game_clock / frame_time << endl;
+        player.update(game_clock);
+        zombie.update(game_clock, player);
+        if (game_clock == (421+43)*frame_time*10)
+            game_clock = 0;
+    }
 }
 
 void mouseClicks(int button, int state, int x, int y){
@@ -132,51 +147,27 @@ void mouseClicks(int button, int state, int x, int y){
     if(!player.reload){
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
             player.shoot = true;
-            player.rand_offset = (rand() % player.arma.accuracy) - 2.5;
+            player.rand_offset = (rand() % player.weapon.accuracy) - 2.5;
             player.shoot_left = 3 * frame_time;
-            game_time = 0;
+            // game_clock = 0;
         }else{
             player.shoot = false;
         }
     }
     if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
         player.attack = true;
-        game_time = 0;
+        game_clock = 0;
     }else{
         player.attack = false;
     }
     
 }
 
-void keyDown(unsigned char tecla, int x, int y){
+void keyDown(unsigned char key, int x, int y){
     player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
-    keyStates[tecla] = 1;
-    if(tecla == 'r' || tecla == 'R'){
-        player.reload = true;
-        player.reload_left = player.arma.reload_time;
-        player.shoot = false;
-        player.attack = false;
-    }
-    if(tecla == '1'){
-        player.arma = knife;
-        player.reload = false;
-    }
-    if(tecla == '2'){
-        player.arma = handgun;
-        player.reload = false;
-    }
-    if(tecla == '3'){
-        player.arma = shotgun;
-        player.reload = false;
-    }
-    if(tecla == '4'){
-        player.arma = rifle;
-        player.reload = false;
-    }
-    if(tecla == 'f' || tecla == 'F' ){
-        player.arma = flashlight;
-        player.reload = false;
-    }
+    keyStates[key] = 1;
+    player.actionReload(key);
+    player.actionChangeWeapon(key);
 
     if (keyStates['a'] + keyStates['s'] + keyStates['d'] + keyStates['w'] + keyStates['A'] + keyStates['S'] + keyStates['D'] + keyStates['W']){
         player.idle = false;
