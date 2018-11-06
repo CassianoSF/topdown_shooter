@@ -1,3 +1,4 @@
+
 int* keyStates = new int[256]; // Estado das teclas 0 e 1
 int screen_w = 1000;           // largura da tela
 int screen_h = 700;            // altura da tela
@@ -37,6 +38,9 @@ GameObject obstaculo_0(Coordinate(20,-40), textures[0], VERDE, 10, 10, 10);
 GameObject obstaculo_1(Coordinate(-10,-30), textures[0], VERDE, 10, 10, 40);
 GameObject obstaculo_2(Coordinate(-2,10), textures[0], VERDE, 10, 10, -210);
 
+Animation player_animations[27];
+Animation zombie_animations[3];
+
 Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
 Zombie zombie(4,4,100,50);
 
@@ -59,7 +63,7 @@ void renderGame(void){
     obstaculo_0.render();
     obstaculo_1.render();
     obstaculo_2.render();
-    player.render(textures, game_clock, frame_time);
+    player.render(game_clock, frame_time);
     zombie.render(textures, game_clock, frame_time);
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
@@ -76,10 +80,10 @@ void updateGame(){
         game_clock = 0;
     }
     
-    if (time_flag != game_clock / frame_time){
-        time_flag = game_clock / frame_time;
-        cout << game_clock / frame_time << endl;
-    }
+    // if (time_flag != game_clock / frame_time){
+    //     time_flag = game_clock / frame_time;
+    //     cout << game_clock / frame_time << endl;
+    // }
 }
 
 void keyDown(unsigned char key, int x, int y){
@@ -110,6 +114,165 @@ void mouseMove(int x, int y){
 void mouseDrag(int x, int y){
     mira.update(x,y);
     player.rotate(x, y);
+}
+
+void loadAnimations(){
+    for (int i = 0; i < 421+43; ++i){
+        if(textures[i].animation == "shoot_texture"){   
+            player_animations[SHOOT_TEXTURE].textures[textures[i].index] = textures[i];
+            player_animations[SHOOT_TEXTURE].frames++;
+            player_animations[SHOOT_TEXTURE].name = "shoot_texture";
+        }
+        else if(textures[i].animation == "flashlight_meleeattack"){   
+            player_animations[FLASHLIGHT_MELEEATTACK].textures[textures[i].index] = textures[i];
+            player_animations[FLASHLIGHT_MELEEATTACK].frames++;
+            player_animations[FLASHLIGHT_MELEEATTACK].name = "flashlight_meleeattack";
+        }
+        else if(textures[i].animation == "flashlight_move"){   
+            player_animations[FLASHLIGHT_MOVE].textures[textures[i].index] = textures[i];
+            player_animations[FLASHLIGHT_MOVE].frames++;
+            player_animations[FLASHLIGHT_MOVE].name = "flashlight_move";
+        }
+        else if(textures[i].animation == "flashlight_idle"){   
+            player_animations[FLASHLIGHT_IDLE].textures[textures[i].index] = textures[i];
+            player_animations[FLASHLIGHT_IDLE].frames++;
+            player_animations[FLASHLIGHT_IDLE].name = "flashlight_idle";
+        }
+        else if(textures[i].animation == "feet_walk"){   
+            player_animations[FEET_WALK].textures[textures[i].index] = textures[i];
+            player_animations[FEET_WALK].frames++;
+            player_animations[FEET_WALK].name = "feet_walk";
+        }
+        else if(textures[i].animation == "feet_strafe_left"){   
+            player_animations[FEET_STRAFE_LEFT].textures[textures[i].index] = textures[i];
+            player_animations[FEET_STRAFE_LEFT].frames++;
+            player_animations[FEET_STRAFE_LEFT].name = "feet_strafe_left";
+        }
+        else if(textures[i].animation == "feet_strafe_right"){   
+            player_animations[FEET_STRAFE_RIGHT].textures[textures[i].index] = textures[i];
+            player_animations[FEET_STRAFE_RIGHT].frames++;
+            player_animations[FEET_STRAFE_RIGHT].name = "feet_strafe_right";
+        }
+        else if(textures[i].animation == "feet_run"){   
+            player_animations[FEET_RUN].textures[textures[i].index] = textures[i];
+            player_animations[FEET_RUN].frames++;
+            player_animations[FEET_RUN].name = "feet_run";
+        }
+        else if(textures[i].animation == "feet_idle"){   
+            player_animations[FEET_IDLE].textures[textures[i].index] = textures[i];
+            player_animations[FEET_IDLE].frames++;
+            player_animations[FEET_IDLE].name = "feet_idle";
+        }
+        else if(textures[i].animation == "knife_meleeattack"){   
+            player_animations[KNIFE_MELEEATTACK].textures[textures[i].index] = textures[i];
+            player_animations[KNIFE_MELEEATTACK].frames++;
+            player_animations[KNIFE_MELEEATTACK].name = "knife_meleeattack";
+        }
+        else if(textures[i].animation == "knife_move"){   
+            player_animations[KNIFE_MOVE].textures[textures[i].index] = textures[i];
+            player_animations[KNIFE_MOVE].frames++;
+            player_animations[KNIFE_MOVE].name = "knife_move";
+        }
+        else if(textures[i].animation == "knife_idle"){   
+            player_animations[KNIFE_IDLE].textures[textures[i].index] = textures[i];
+            player_animations[KNIFE_IDLE].frames++;
+            player_animations[KNIFE_IDLE].name = "knife_idle";
+        }
+        else if(textures[i].animation == "handgun_meleeattack"){   
+            player_animations[HANDGUN_MELEEATTACK].textures[textures[i].index] = textures[i];
+            player_animations[HANDGUN_MELEEATTACK].frames++;
+            player_animations[HANDGUN_MELEEATTACK].name = "handgun_meleeattack";
+        }
+        else if(textures[i].animation == "handgun_move"){   
+            player_animations[HANDGUN_MOVE].textures[textures[i].index] = textures[i];
+            player_animations[HANDGUN_MOVE].frames++;
+            player_animations[HANDGUN_MOVE].name = "handgun_move";
+        }
+        else if(textures[i].animation == "handgun_shoot"){   
+            player_animations[HANDGUN_SHOOT].textures[textures[i].index] = textures[i];
+            player_animations[HANDGUN_SHOOT].frames++;
+            player_animations[HANDGUN_SHOOT].name = "handgun_shoot";
+        }
+        else if(textures[i].animation == "handgun_reload"){   
+            player_animations[HANDGUN_RELOAD].textures[textures[i].index] = textures[i];
+            player_animations[HANDGUN_RELOAD].frames++;
+            player_animations[HANDGUN_RELOAD].name = "handgun_reload";
+        }
+        else if(textures[i].animation == "handgun_idle"){   
+            player_animations[HANDGUN_IDLE].textures[textures[i].index] = textures[i];
+            player_animations[HANDGUN_IDLE].frames++;
+            player_animations[HANDGUN_IDLE].name = "handgun_idle";
+        }
+        else if(textures[i].animation == "rifle_meleeattack"){   
+            player_animations[RIFLE_MELEEATTACK].textures[textures[i].index] = textures[i];
+            player_animations[RIFLE_MELEEATTACK].frames++;
+            player_animations[RIFLE_MELEEATTACK].name = "rifle_meleeattack";
+        }
+        else if(textures[i].animation == "rifle_move"){   
+            player_animations[RIFLE_MOVE].textures[textures[i].index] = textures[i];
+            player_animations[RIFLE_MOVE].frames++;
+            player_animations[RIFLE_MOVE].name = "rifle_move";
+        }
+        else if(textures[i].animation == "rifle_shoot"){   
+            player_animations[RIFLE_SHOOT].textures[textures[i].index] = textures[i];
+            player_animations[RIFLE_SHOOT].frames++;
+            player_animations[RIFLE_SHOOT].name = "rifle_shoot";
+        }
+        else if(textures[i].animation == "rifle_reload"){   
+            player_animations[RIFLE_RELOAD].textures[textures[i].index] = textures[i];
+            player_animations[RIFLE_RELOAD].frames++;
+            player_animations[RIFLE_RELOAD].name = "rifle_reload";
+        }
+        else if(textures[i].animation == "rifle_idle"){   
+            player_animations[RIFLE_IDLE].textures[textures[i].index] = textures[i];
+            player_animations[RIFLE_IDLE].frames++;
+            player_animations[RIFLE_IDLE].name = "rifle_idle";
+        }
+        else if(textures[i].animation == "shotgun_meleeattack"){   
+            player_animations[SHOTGUN_MELEEATTACK].textures[textures[i].index] = textures[i];
+            player_animations[SHOTGUN_MELEEATTACK].frames++;
+            player_animations[SHOTGUN_MELEEATTACK].name = "shotgun_meleeattack";
+        }
+        else if(textures[i].animation == "shotgun_move"){   
+            player_animations[SHOTGUN_MOVE].textures[textures[i].index] = textures[i];
+            player_animations[SHOTGUN_MOVE].frames++;
+            player_animations[SHOTGUN_MOVE].name = "shotgun_move";
+        }
+        else if(textures[i].animation == "shotgun_shoot"){   
+            player_animations[SHOTGUN_SHOOT].textures[textures[i].index] = textures[i];
+            player_animations[SHOTGUN_SHOOT].frames++;
+            player_animations[SHOTGUN_SHOOT].name = "shotgun_shoot";
+        }
+        else if(textures[i].animation == "shotgun_reload"){   
+            player_animations[SHOTGUN_RELOAD].textures[textures[i].index] = textures[i];
+            player_animations[SHOTGUN_RELOAD].frames++;
+            player_animations[SHOTGUN_RELOAD].name = "shotgun_reload";
+        }
+        else if(textures[i].animation == "shotgun_idle"){   
+            player_animations[SHOTGUN_IDLE].textures[textures[i].index] = textures[i];
+            player_animations[SHOTGUN_IDLE].frames++;
+            player_animations[SHOTGUN_IDLE].name = "shotgun_idle";
+        }
+
+
+
+        else if(textures[i].animation == "skeleton_idle"){   
+            zombie_animations[SKELETON_IDLE].textures[textures[i].index] = textures[i];
+            zombie_animations[SKELETON_IDLE].frames++;
+            zombie_animations[SKELETON_IDLE].name = "skeleton_idle";
+        }
+        else if(textures[i].animation == "skeleton_move"){   
+            zombie_animations[SKELETON_MOVE].textures[textures[i].index] = textures[i];
+            zombie_animations[SKELETON_MOVE].frames++;
+            zombie_animations[SKELETON_MOVE].name = "skeleton_move";
+        }
+        else if(textures[i].animation == "skeleton_attack"){   
+            zombie_animations[SKELETON_ATTACK].textures[textures[i].index] = textures[i];
+            zombie_animations[SKELETON_ATTACK].frames++;
+            zombie_animations[SKELETON_ATTACK].name = "skeleton_attack";
+        }
+    }
+    player.setAnimations(player_animations);
 }
 
 void loadTextures(){
@@ -208,6 +371,7 @@ int main(int argc, char** argv) {
     glutCreateWindow("PNG texture");             // Inicializa a janaela
     initCallbacks();                             // Inicializa callbacks
     loadTextures();                              // Inicializa textures
+    loadAnimations();                            // Inicializa animações
     initKeyboard();                              // Inicializa teclado
     initMouse();                                 // Inicializa mouse
     glutMainLoop();                              // Main loop

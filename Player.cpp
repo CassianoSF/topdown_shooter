@@ -6,9 +6,10 @@ class Player {
     int reload_left;
     int shoot_left;
     float rand_offset, inclinacao;
-    string animation, pernas;
+    int animation, legs;
     Arma arma;
     Arma inventory[5];
+    Animation animations[27];
 
     bool shoot=false, 
          idle=true, 
@@ -22,9 +23,16 @@ class Player {
         pos = Coordinate(x,y);
         inclinacao = angle;
         arma = _arma;
-        pernas = "feet_idle";
+        legs = FEET_IDLE;
+        animation = KNIFE_IDLE;
         for (int i = 0; i < 5; ++i){
             inventory[i] = _inventory[i];
+        }
+    }
+
+    void setAnimations(Animation _animations[27]){
+        for (int i = 0; i < 27; ++i){
+            animations[i] = _animations[i];
         }
     }
 
@@ -79,6 +87,8 @@ class Player {
 
     void actionChangeItem(int num){
         arma = inventory[num];
+        shoot = false;
+        attack = false;
         reload = false;
     }
 
@@ -90,41 +100,48 @@ class Player {
     }
 
     void update(int game_time, int frame_time){
-        stringstream ss;
-
         if(attack){
-            animation_frames = 15;
-            ss << arma.name << "_" << "meleeattack";
-
+            if(arma.name == "flashlight"){ animation = FLASHLIGHT_MELEEATTACK; }
+            if(arma.name == "knife")     { animation = KNIFE_MELEEATTACK;      }
+            if(arma.name == "handgun")   { animation = HANDGUN_MELEEATTACK;    }
+            if(arma.name == "shotgun")   { animation = SHOTGUN_MELEEATTACK;    }
+            if(arma.name == "rifle")     { animation = RIFLE_MELEEATTACK;      }
         }else if (reload && arma.reload_time && reload_left){
+            if(arma.name == "handgun")   { animation = HANDGUN_RELOAD;    }
+            if(arma.name == "shotgun")   { animation = SHOTGUN_RELOAD;    }
+            if(arma.name == "rifle")     { animation = RIFLE_RELOAD;      }
             reload_left--;
-            animation_frames = 15;
-            ss << arma.name << "_" << "reload";
             reload = !(reload_left == 1);
 
         }else if (shoot && game_time/arma.rate % (frame_time/10) == 0){
-            animation_frames = 3;
-            ss << arma.name << "_" << "shoot";
+            if(arma.name == "handgun")   { animation = HANDGUN_SHOOT;    }
+            if(arma.name == "shotgun")   { animation = SHOTGUN_SHOOT;    }
+            if(arma.name == "rifle")     { animation = RIFLE_SHOOT;      }
 
         }else if(walk || run){
-            animation_frames = 20;
-            ss << arma.name << "_" << "move";
+            if(arma.name == "flashlight"){ animation = FLASHLIGHT_MOVE; }
+            if(arma.name == "knife")     { animation = KNIFE_MOVE;      }
+            if(arma.name == "handgun")   { animation = HANDGUN_MOVE;    }
+            if(arma.name == "shotgun")   { animation = SHOTGUN_MOVE;    }
+            if(arma.name == "rifle")     { animation = RIFLE_MOVE;      }
         
         }else if(idle){
-            ss << arma.name << "_" << "idle";
-            animation_frames = 20;
+            if(arma.name == "flashlight"){ animation = FLASHLIGHT_IDLE; }
+            if(arma.name == "knife")     { animation = KNIFE_IDLE;      }
+            if(arma.name == "handgun")   { animation = HANDGUN_IDLE;    }
+            if(arma.name == "shotgun")   { animation = SHOTGUN_IDLE;    }
+            if(arma.name == "rifle")     { animation = RIFLE_IDLE;      }
         }
 
         if(walk || run){
             if (run){
-                pernas = "feet_run";
+                legs = FEET_RUN;
             }else{
-                pernas = "feet_walk";
+                legs = FEET_WALK;
             }
         }else{
-            pernas="feet_idle";
+            legs = FEET_IDLE;
         }
-        animation = ss.str();
     }
 
     void caminha(int* keyStates){
@@ -161,7 +178,7 @@ class Player {
         } 
     }
 
-    void renderTiro(Texture textures[421+43], int game_time, int frame_time){
+    void renderTiro(int game_time, int frame_time){
         if (shoot && !reload && game_time/arma.rate % (frame_time/10) == 0){
             glPushMatrix();
                 glRotatef(rand_offset-86, 0, 0, 1);
@@ -173,10 +190,7 @@ class Player {
                     glVertex2f( +1.08, -0.0);
                 glEnd();
             glPopMatrix();
-            for (int i = 0; i < 421+43; ++i){
-                if(textures[i].animation == "shoot_texture")
-                    textures[i].render();
-            }
+            animations[SHOOT_TEXTURE].textures[0].render();
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 0.0);
                 glVertex2f(  1.3,-3.1);
@@ -191,12 +205,9 @@ class Player {
         }
     }
 
-    void renderBody(Texture textures[421+43], int game_time, int frame_time){
-        Texture texture;
-        for (int i = 0; i < 421+43; ++i){
-            if(textures[i].animation == animation && textures[i].index == (game_time / frame_time) % animation_frames)
-                textures[i].render();
-        }
+    void renderBody(int game_time, int frame_time){
+        int index = (game_time / frame_time) % animations[animation].frames;
+        animations[animation].textures[index].render();
         glBegin(GL_QUADS);
             glTexCoord2f(0.0, 0.0);
             glVertex2f( -2.0,-2.0);
@@ -211,16 +222,11 @@ class Player {
 
     }
 
-    void renderLegs(Texture textures[421+43], int game_time, int frame_time){
+    void renderLegs(int game_time, int frame_time){
         glPushMatrix();
             glTranslatef(-0.3, -0.2, -10.0);
-            Texture texture;
-            for (int i = 0; i < 421+43; ++i){
-                if(idle && textures[i].animation == "feet_idle")
-                    textures[i].render();
-                else if(textures[i].animation == pernas && textures[i].index == (game_time / frame_time) % 20)
-                    textures[i].render();
-            }
+            int index = (game_time / frame_time) % animations[legs].frames;
+            animations[legs].textures[index].render();
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 0.0);
                 glVertex2f( -2.0,-2.0);
@@ -235,13 +241,13 @@ class Player {
         glPopMatrix();
     }
 
-    void render(Texture textures[421+43], int game_time, int frame_time){
+    void render(int game_time, int frame_time){
         glPushMatrix();
             glTranslatef(pos.x, pos.y, 0);
             glRotatef(inclinacao, 0, 0, 1);
-            renderLegs(textures, game_time, frame_time);
-            renderTiro(textures, game_time, frame_time);
-            renderBody(textures, game_time, frame_time);
+            renderLegs(game_time, frame_time);
+            renderTiro(game_time, frame_time);
+            renderBody(game_time, frame_time);
         glPopMatrix();
     }
 };
