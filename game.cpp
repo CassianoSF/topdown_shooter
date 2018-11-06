@@ -82,12 +82,9 @@ void updateGame(){
 void keyDown(unsigned char tecla, int x, int y){
     player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
     keyStates[tecla] = 1;
-    
+
     if(tecla == 'r' || tecla == 'R'){
-        player.reload = true;
-        player.reload_left = player.arma.reload_time;
-        player.shoot = false;
-        player.attack = false;
+        player.actionReload();
     }
     if(tecla == '1'){
         player.arma = knife;

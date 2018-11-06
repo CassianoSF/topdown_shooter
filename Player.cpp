@@ -25,6 +25,13 @@ class Player {
         arma = _arma;
     }
 
+    void actionReload(){
+        reload = true;
+        reload_left = arma.reload_time;
+        shoot = false;
+        attack = false;
+    }
+
     void update(int game_time){
         stringstream ss;
 
