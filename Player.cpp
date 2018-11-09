@@ -45,10 +45,9 @@ class Player {
         for(int i=0 ; i<5 ; i++) {
             if(key == itemKeys[i]){
                 if (i==5){actionChangeItem(0);}
-                actionChangeItem(i);
+                else     {actionChangeItem(i);}
             }
         }
-        string moveKeys = "asdwASDW";
     }
 
     void hundleKeyUp(int keyStates[256], char key){

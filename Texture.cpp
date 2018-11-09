@@ -8,7 +8,7 @@ class Texture {
     void render(){
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         glEnable(GL_TEXTURE_2D);
-        glTranslatef(0, 0, 1);
+        glTranslatef(0, 0, 0);
         if(animation == "knife_meleeattack"){
             glTranslatef(0.3,-0.45, 6.2);
         }

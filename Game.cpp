@@ -131,13 +131,14 @@ void loadTextures(){
 void myIdle(){
     game_clock++;
     player.caminha(keyStates);
+    player.update(game_clock);
+    zombie.update(game_clock, player);
+    if (game_clock == (421+43)*frame_time*10)
+        game_clock = 0;
+
     if (time_flag != game_clock / frame_time){
         time_flag = game_clock / frame_time;
         cout << game_clock / frame_time << endl;
-        player.update(game_clock);
-        zombie.update(game_clock, player);
-        if (game_clock == (421+43)*frame_time*10)
-            game_clock = 0;
     }
 }
 
