@@ -25,8 +25,8 @@ class Zombie{
     }
 
     void update(int game_clock, int frame_time, Player player){
+        cout << angle << endl;
         if(playerOnSight(player)){
-            cout << "playerOnSight" << endl;
             action = "follow";
             action_left = 400;
             move = true;
@@ -38,11 +38,11 @@ class Zombie{
         }
         if(action_left){ 
             if(game_clock % (frame_time/4) == 0){
-                action_left--;
-                cout << action << endl;
                 if (action == "turn_left"){
+                    action_left--;
                     angle = angle + 1;
                 }else if(action == "turn_right"){
+                    action_left--;
                     angle = angle - 1;
                 }else if(action == "follow"){
                     float diffx = player.pos.x - pos.x;
@@ -68,11 +68,6 @@ class Zombie{
         }else if(idle){
             animation = "skeleton_idle";
         }
-
-
-        // if(game_clock % (frame_time/4) == 0){
-        // }    
-
     }
 
     bool playerOnSight(Player player){
@@ -80,7 +75,8 @@ class Zombie{
         float diffy = player.pos.y - pos.y;
         float distance        = sqrt((pow(diffy, 2) + pow(diffx, 2)));
         float angle_to_player = (-(GLfloat)atan2(diffx, diffy)/3.1415*180.0)-angle;
-        if(angle_to_player < -145 && angle_to_player > -220 && distance < 15)
+        bool condition = angle_to_player < -145 && angle_to_player > -220 && distance < 15;
+        if(condition)
             return true;
         return false;
     }
