@@ -25,8 +25,19 @@ class Zombie{
     }
 
     void update(int game_clock, int frame_time, Player player){
-        cout << angle << endl;
+        float diffx = player.pos.x - pos.x;
+        float diffy = player.pos.y - pos.y;
+        float distance        = sqrt((pow(diffy, 2) + pow(diffx, 2)));
+        float angle_to_player = (-(GLfloat)atan2(diffx, diffy)/3.1415*180.0)-angle;
+        bool cond = angle_to_player < -145 && angle_to_player > -220 && distance < 15;
+        if (distance < 2 && playerOnSight(player)){
+            attack = true;
+        }else{
+            attack = false;
+        }
+
         if(playerOnSight(player)){
+            // cout << "playerOnSight" << endl;
             action = "follow";
             action_left = 400;
             move = true;
@@ -38,11 +49,11 @@ class Zombie{
         }
         if(action_left){ 
             if(game_clock % (frame_time/4) == 0){
+                action_left--;
+                // cout << action << endl;
                 if (action == "turn_left"){
-                    action_left--;
                     angle = angle + 1;
                 }else if(action == "turn_right"){
-                    action_left--;
                     angle = angle - 1;
                 }else if(action == "follow"){
                     float diffx = player.pos.x - pos.x;
@@ -75,9 +86,10 @@ class Zombie{
         float diffy = player.pos.y - pos.y;
         float distance        = sqrt((pow(diffy, 2) + pow(diffx, 2)));
         float angle_to_player = (-(GLfloat)atan2(diffx, diffy)/3.1415*180.0)-angle;
-        bool condition = angle_to_player < -145 && angle_to_player > -220 && distance < 15;
-        if(condition)
+        bool cond = angle_to_player < -145 && angle_to_player > -220 && distance < 15;
+        if(cond){
             return true;
+        }
         return false;
     }
 
@@ -101,22 +113,22 @@ class Zombie{
                 glVertex2f(  2.0,-2.0);
                 glEnd();
             glDisable(GL_TEXTURE_2D);
-            glPushMatrix();
-                // glRotatef(-45, 0, 0, 0);
-                glBegin(GL_POLYGON);
-                    glColor4f(1, 1, 0, 0.1);
-                    glVertex2f(0, 0);
-                     for(int i = -3; i < 27; i++){
-                        if (i < 3){
-                            float theta = 2.0f * 3.1415926f * float(i) / float(30);
-                            float cx = 15 * cosf(theta);
-                            float cy = 15 * sinf(theta);
-                            glVertex2f(cx, cy);
-                        }
-                    }
-                    glVertex2f(0, 0);
-                glEnd();
-            glPopMatrix();
+            // glPushMatrix();
+            //     // glRotatef(-45, 0, 0, 0);
+            //     glBegin(GL_POLYGON);
+            //         glColor4f(1, 1, 0, 0.1);
+            //         glVertex2f(0, 0);
+            //          for(int i = -3; i < 27; i++){
+            //             if (i < 3){
+            //                 float theta = 2.0f * 3.1415926f * float(i) / float(30);
+            //                 float cx = 15 * cosf(theta);
+            //                 float cy = 15 * sinf(theta);
+            //                 glVertex2f(cx, cy);
+            //             }
+            //         }
+            //         glVertex2f(0, 0);
+            //     glEnd();
+            // glPopMatrix();
         glPopMatrix();
 
     }

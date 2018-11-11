@@ -43,6 +43,11 @@ Animation zombie_animations[3];
 
 Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
 Zombie zombie(4,4,100,50);
+Zombie zombie1(14,14,100,50);
+Zombie zombie2(24,4,100,50);
+Zombie zombie3(6,2,100,50);
+Zombie zombie4(8,4,100,50);
+Zombie zombie5(8,2,100,50);
 
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
@@ -65,6 +70,11 @@ void renderGame(void){
     obstaculo_2.render();
     player.render(game_clock, frame_time);
     zombie.render(textures, game_clock, frame_time);
+    zombie1.render(textures, game_clock, frame_time);
+    zombie2.render(textures, game_clock, frame_time);
+    zombie3.render(textures, game_clock, frame_time);
+    zombie4.render(textures, game_clock, frame_time);
+    zombie5.render(textures, game_clock, frame_time);
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
     glutSwapBuffers();
@@ -72,6 +82,11 @@ void renderGame(void){
 }
 
 void updateGame(){
+    zombie1.update(game_clock, frame_time, player);
+    zombie2.update(game_clock, frame_time, player);
+    zombie3.update(game_clock, frame_time, player);
+    zombie4.update(game_clock, frame_time, player);
+    zombie5.update(game_clock, frame_time, player);
     game_clock++;
     player.caminha(keyStates);
     player.update(game_clock, frame_time);
