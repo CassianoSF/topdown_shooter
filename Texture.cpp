@@ -23,6 +23,9 @@ class Texture {
         if(animation == "rifle_meleeattack" || animation == "shotgun_meleeattack"){
             glTranslatef(0, 0, 8);
         }
+        if(animation == "skeleton_move" || animation == "skeleton_attack"){
+            glTranslatef(0, 0, 5);
+        }
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
