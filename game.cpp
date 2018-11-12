@@ -70,11 +70,11 @@ void renderGame(void){
     obstaculo_2.render();
     player.render(game_clock, frame_time);
     zombie.render(textures, game_clock, frame_time);
-    zombie1.render(textures, game_clock, frame_time);
-    zombie2.render(textures, game_clock, frame_time);
-    zombie3.render(textures, game_clock, frame_time);
-    zombie4.render(textures, game_clock, frame_time);
-    zombie5.render(textures, game_clock, frame_time);
+    // zombie1.render(textures, game_clock, frame_time);
+    // zombie2.render(textures, game_clock, frame_time);
+    // zombie3.render(textures, game_clock, frame_time);
+    // zombie4.render(textures, game_clock, frame_time);
+    // zombie5.render(textures, game_clock, frame_time);
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
     glutSwapBuffers();
@@ -82,11 +82,11 @@ void renderGame(void){
 }
 
 void updateGame(){
-    zombie1.update(game_clock, frame_time, player);
-    zombie2.update(game_clock, frame_time, player);
-    zombie3.update(game_clock, frame_time, player);
-    zombie4.update(game_clock, frame_time, player);
-    zombie5.update(game_clock, frame_time, player);
+    // zombie1.update(game_clock, frame_time, player);
+    // zombie2.update(game_clock, frame_time, player);
+    // zombie3.update(game_clock, frame_time, player);
+    // zombie4.update(game_clock, frame_time, player);
+    // zombie5.update(game_clock, frame_time, player);
     game_clock++;
     player.caminha(keyStates);
     player.update(game_clock, frame_time);
@@ -288,6 +288,12 @@ void loadAnimations(){
         }
     }
     player.setAnimations(player_animations);
+    zombie.setAnimations(zombie_animations);
+    zombie1.setAnimations(zombie_animations);
+    zombie2.setAnimations(zombie_animations);
+    zombie3.setAnimations(zombie_animations);
+    zombie4.setAnimations(zombie_animations);
+    zombie5.setAnimations(zombie_animations);
 }
 
 void loadTextures(){

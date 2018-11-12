@@ -99,47 +99,49 @@ class Player {
     }
 
     void update(int game_time, int frame_time){
-        if(attack){
-            if(arma.name == "flashlight"){ animation = FLASHLIGHT_MELEEATTACK; }
-            if(arma.name == "knife")     { animation = KNIFE_MELEEATTACK;      }
-            if(arma.name == "handgun")   { animation = HANDGUN_MELEEATTACK;    }
-            if(arma.name == "shotgun")   { animation = SHOTGUN_MELEEATTACK;    }
-            if(arma.name == "rifle")     { animation = RIFLE_MELEEATTACK;      }
-        }else if (reload && arma.reload_time && reload_left){
-            if(arma.name == "handgun")   { animation = HANDGUN_RELOAD;    }
-            if(arma.name == "shotgun")   { animation = SHOTGUN_RELOAD;    }
-            if(arma.name == "rifle")     { animation = RIFLE_RELOAD;      }
-            reload_left--;
-            reload = !(reload_left == 1);
+        if(game_time % frame_time == 0){
+            if(attack){
+                if(arma.name == "flashlight"){ animation = FLASHLIGHT_MELEEATTACK; }
+                if(arma.name == "knife")     { animation = KNIFE_MELEEATTACK;      }
+                if(arma.name == "handgun")   { animation = HANDGUN_MELEEATTACK;    }
+                if(arma.name == "shotgun")   { animation = SHOTGUN_MELEEATTACK;    }
+                if(arma.name == "rifle")     { animation = RIFLE_MELEEATTACK;      }
+            }else if (reload && arma.reload_time && reload_left){
+                if(arma.name == "handgun")   { animation = HANDGUN_RELOAD;    }
+                if(arma.name == "shotgun")   { animation = SHOTGUN_RELOAD;    }
+                if(arma.name == "rifle")     { animation = RIFLE_RELOAD;      }
+                reload_left--;
+                reload = !(reload_left == 1);
 
-        }else if (shoot && game_time/arma.rate % (frame_time/10) == 0){
-            if(arma.name == "handgun")   { animation = HANDGUN_SHOOT;    }
-            if(arma.name == "shotgun")   { animation = SHOTGUN_SHOOT;    }
-            if(arma.name == "rifle")     { animation = RIFLE_SHOOT;      }
+            }else if (shoot && game_time/arma.rate % (frame_time/10) == 0){
+                if(arma.name == "handgun")   { animation = HANDGUN_SHOOT;    }
+                if(arma.name == "shotgun")   { animation = SHOTGUN_SHOOT;    }
+                if(arma.name == "rifle")     { animation = RIFLE_SHOOT;      }
 
-        }else if(walk || run){
-            if(arma.name == "flashlight"){ animation = FLASHLIGHT_MOVE; }
-            if(arma.name == "knife")     { animation = KNIFE_MOVE;      }
-            if(arma.name == "handgun")   { animation = HANDGUN_MOVE;    }
-            if(arma.name == "shotgun")   { animation = SHOTGUN_MOVE;    }
-            if(arma.name == "rifle")     { animation = RIFLE_MOVE;      }
-        
-        }else if(idle){
-            if(arma.name == "flashlight"){ animation = FLASHLIGHT_IDLE; }
-            if(arma.name == "knife")     { animation = KNIFE_IDLE;      }
-            if(arma.name == "handgun")   { animation = HANDGUN_IDLE;    }
-            if(arma.name == "shotgun")   { animation = SHOTGUN_IDLE;    }
-            if(arma.name == "rifle")     { animation = RIFLE_IDLE;      }
-        }
-
-        if(walk || run){
-            if (run){
-                legs = FEET_RUN;
-            }else{
-                legs = FEET_WALK;
+            }else if(walk || run){
+                if(arma.name == "flashlight"){ animation = FLASHLIGHT_MOVE; }
+                if(arma.name == "knife")     { animation = KNIFE_MOVE;      }
+                if(arma.name == "handgun")   { animation = HANDGUN_MOVE;    }
+                if(arma.name == "shotgun")   { animation = SHOTGUN_MOVE;    }
+                if(arma.name == "rifle")     { animation = RIFLE_MOVE;      }
+            
+            }else if(idle){
+                if(arma.name == "flashlight"){ animation = FLASHLIGHT_IDLE; }
+                if(arma.name == "knife")     { animation = KNIFE_IDLE;      }
+                if(arma.name == "handgun")   { animation = HANDGUN_IDLE;    }
+                if(arma.name == "shotgun")   { animation = SHOTGUN_IDLE;    }
+                if(arma.name == "rifle")     { animation = RIFLE_IDLE;      }
             }
-        }else{
-            legs = FEET_IDLE;
+
+            if(walk || run){
+                if (run){
+                    legs = FEET_RUN;
+                }else{
+                    legs = FEET_WALK;
+                }
+            }else{
+                legs = FEET_IDLE;
+            }
         }
     }
 
