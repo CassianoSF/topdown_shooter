@@ -100,6 +100,8 @@ class Player {
 
     void update(int game_clock, int frame_time){
         if(game_clock % frame_time == 0){
+            cout << arma.bullets << endl;
+            cout << reload_left << endl;
             if(attack){
                 if(arma.name == "flashlight"){ animation = FLASHLIGHT_MELEEATTACK; }
                 if(arma.name == "knife")     { animation = KNIFE_MELEEATTACK;      }
@@ -111,7 +113,10 @@ class Player {
                 if(arma.name == "shotgun")   { animation = SHOTGUN_RELOAD;    }
                 if(arma.name == "rifle")     { animation = RIFLE_RELOAD;      }
                 reload_left--;
-                reload = !(reload_left == 1);
+                if (reload_left == 1){
+                    arma.bullets = arma.cap;
+                    reload = false;
+                }
 
             }else if (didShoot(game_clock, frame_time)){
                 if(arma.name == "handgun")   { animation = HANDGUN_SHOOT;    }
@@ -180,21 +185,21 @@ class Player {
     }
 
     bool didShoot(int game_clock, int frame_time){
-        return(shoot && !reload && game_clock/arma.rate % (frame_time/10) == 0);
+        if (arma.bullets == 0){
+            reload = true;
+            shoot = false;
+            return false;
+        }
+        if(shoot && !reload && game_clock/arma.rate % (frame_time/10) == 0){
+            if(game_clock % frame_time == 0)
+                arma.bullets -= 1;
+            return true;
+        }
+        return false;
     }
 
     void renderTiro(int game_clock, int frame_time){
         if (didShoot(game_clock, frame_time)){
-            glPushMatrix();
-                glRotatef(rand_offset-86, 0, 0, 1);
-                glBegin(GL_POLYGON);
-                    glColor4f(1, 1, 0, 1);
-                    glVertex2f( +1.03, -0.0);
-                    glVertex2f( +1.03, +100);
-                    glVertex2f( +1.08, +100);
-                    glVertex2f( +1.08, -0.0);
-                glEnd();
-            glPopMatrix();
             animations[SHOOT_TEXTURE].textures[0].render();
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 0.0);

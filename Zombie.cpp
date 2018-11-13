@@ -54,7 +54,7 @@ class Zombie{
             float diffx2 = pos.x - player.pos.x;
             float diffy2 = pos.y - player.pos.y;
             float angle_to_zombie = player.inclinacao - ((-(GLfloat)atan2(diffx2, diffy2)/3.1415*180.0));
-            bool on_player_sight = angle_to_zombie < 90+player.arma.accuracy && angle_to_zombie > 90-player.arma.accuracy;
+            bool on_player_sight = angle_to_zombie < 90+player.arma.accuracy+5 && angle_to_zombie > 90-player.arma.accuracy;
             if (on_player_sight && player.didShoot(game_clock, frame_time)){
                 life -= player.arma.damage;
                 take_hit = true;
@@ -62,7 +62,6 @@ class Zombie{
                 take_hit = false;
             }
 
-            cout << angle_to_zombie << endl;
 
             if (attack)  {animation = SKELETON_ATTACK;}
             else if(move){animation = SKELETON_MOVE;}

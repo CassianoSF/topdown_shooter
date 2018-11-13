@@ -20,11 +20,11 @@ Color    PRETO(0.0, 0.0, 0.0, 1.0);
 Color  LARANJA(1.0, 0.6, 0.3, 1.0);
 Color  BRANCO( 1.0, 1.0, 1.0, 1.0);
 //         Arma( bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
-Arma flashlight( false,        "flashlight", 1,           40,       1,        1,         1,                1         );
-Arma      knife( false,        "knife",      1,           20,       2,        1,         1,                1         );
-Arma    handgun( true,         "handgun",    1,           30,       3,        100,       3000,             2         );
-Arma    shotgun( true,         "shotgun",    1,           100,      4,        200,       7000,             6         );
-Arma      rifle( true,         "rifle",      1,           40,       5,        10,        4000,             3         );
+Arma flashlight( false,        "flashlight", 1,           99999*9999, 1,        1,         1,                1         );
+Arma      knife( false,        "knife",      1,           99999*9999, 2,        1,         1,                1         );
+Arma    handgun( true,         "handgun",    1,           3*20,       3,        100,       10,               2         );
+Arma    shotgun( true,         "shotgun",    1,           3*5,        4,        200,       40,               6         );
+Arma      rifle( true,         "rifle",      1,           3*30,       5,        10,        20,               3         );
 
 Arma inventory[5] = { flashlight, knife, handgun, shotgun, rifle };
 
