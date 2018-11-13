@@ -60,7 +60,7 @@ Zombie zombie5(8,2,100,50);
 void renderGame(void){
     glLoadIdentity();                                     // Reseta matiz
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);   // Limpa o buffer de cores
-    if(player.shoot && !player.reload && game_clock/player.arma.rate % (frame_time/10) == 0)
+    if(player.didShoot(game_clock, frame_time))
         glTranslatef(-player.pos.x+0.11, -player.pos.y+0.11, -35);      // Posiciona o senário deslocado da camera    
     else
         glTranslatef(-player.pos.x, -player.pos.y, -35);      // Posiciona o senário deslocado da camera

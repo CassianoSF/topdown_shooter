@@ -98,8 +98,8 @@ class Player {
         attack = false;
     }
 
-    void update(int game_time, int frame_time){
-        if(game_time % frame_time == 0){
+    void update(int game_clock, int frame_time){
+        if(game_clock % frame_time == 0){
             if(attack){
                 if(arma.name == "flashlight"){ animation = FLASHLIGHT_MELEEATTACK; }
                 if(arma.name == "knife")     { animation = KNIFE_MELEEATTACK;      }
@@ -113,7 +113,7 @@ class Player {
                 reload_left--;
                 reload = !(reload_left == 1);
 
-            }else if (shoot && game_time/arma.rate % (frame_time/10) == 0){
+            }else if (didShoot(game_clock, frame_time)){
                 if(arma.name == "handgun")   { animation = HANDGUN_SHOOT;    }
                 if(arma.name == "shotgun")   { animation = SHOTGUN_SHOOT;    }
                 if(arma.name == "rifle")     { animation = RIFLE_SHOOT;      }
@@ -179,8 +179,12 @@ class Player {
         } 
     }
 
-    void renderTiro(int game_time, int frame_time){
-        if (shoot && !reload && game_time/arma.rate % (frame_time/10) == 0){
+    bool didShoot(int game_clock, int frame_time){
+        return(shoot && !reload && game_clock/arma.rate % (frame_time/10) == 0);
+    }
+
+    void renderTiro(int game_clock, int frame_time){
+        if (didShoot(game_clock, frame_time)){
             glPushMatrix();
                 glRotatef(rand_offset-86, 0, 0, 1);
                 glBegin(GL_POLYGON);
@@ -206,8 +210,8 @@ class Player {
         }
     }
 
-    void renderBody(int game_time, int frame_time){
-        int index = (game_time / frame_time) % animations[animation].frames;
+    void renderBody(int game_clock, int frame_time){
+        int index = (game_clock / frame_time) % animations[animation].frames;
         animations[animation].textures[index].render();
         glBegin(GL_QUADS);
             glTexCoord2f(0.0, 0.0);
@@ -223,10 +227,10 @@ class Player {
 
     }
 
-    void renderLegs(int game_time, int frame_time){
+    void renderLegs(int game_clock, int frame_time){
         glPushMatrix();
             glTranslatef(-0.3, -0.2, -10.0);
-            int index = (game_time / frame_time) % animations[legs].frames;
+            int index = (game_clock / frame_time) % animations[legs].frames;
             animations[legs].textures[index].render();
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 0.0);
@@ -242,13 +246,13 @@ class Player {
         glPopMatrix();
     }
 
-    void render(int game_time, int frame_time){
+    void render(int game_clock, int frame_time){
         glPushMatrix();
             glTranslatef(pos.x, pos.y, 0);
             glRotatef(inclinacao, 0, 0, 1);
-            renderLegs(game_time, frame_time);
-            renderTiro(game_time, frame_time);
-            renderBody(game_time, frame_time);
+            renderLegs(game_clock, frame_time);
+            renderTiro(game_clock, frame_time);
+            renderBody(game_clock, frame_time);
         glPopMatrix();
     }
 };

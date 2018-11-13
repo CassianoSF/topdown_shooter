@@ -6,7 +6,7 @@ class Zombie{
     Coordinate pos;
     float life, angle;
     int animation;
-    bool attack, move, idle;
+    bool attack, move, idle, take_hit;
     float speed;
     int action_left;
     string action;
@@ -39,7 +39,6 @@ class Zombie{
             float distance        = sqrt((pow(diffy, 2) + pow(diffx, 2)));
             float angle_to_player = angle - ((-(GLfloat)atan2(diffx, diffy)/3.1415*180.0));
             bool cond = ((angle_to_player < -145 && angle_to_player > -220) || (angle_to_player > 145 && angle_to_player < 220)) && distance < 15;
-            cout << angle_to_player << endl;
             if(cond){
                 action = "follow";
                 action_left = 1000;
@@ -51,17 +50,37 @@ class Zombie{
                     attack = false;
                 }
             }
-            if (attack){
-                animation = SKELETON_ATTACK;
 
-            }else if(move){
-                animation = SKELETON_MOVE;
-
-            }else if(idle){
-                animation = SKELETON_IDLE;
+            float diffx2 = pos.x - player.pos.x;
+            float diffy2 = pos.y - player.pos.y;
+            float angle_to_zombie = player.inclinacao - ((-(GLfloat)atan2(diffx2, diffy2)/3.1415*180.0));
+            bool on_player_sight = angle_to_zombie < 90+player.arma.accuracy && angle_to_zombie > 90-player.arma.accuracy;
+            if (on_player_sight && player.didShoot(game_clock, frame_time)){
+                life -= player.arma.damage;
+                take_hit = true;
+            }else{
+                take_hit = false;
             }
+
+            cout << angle_to_zombie << endl;
+
+            if (attack)  {animation = SKELETON_ATTACK;}
+            else if(move){animation = SKELETON_MOVE;}
+            else if(idle){animation = SKELETON_IDLE;}
         }
         
+        if(take_hit){
+            action = "follow";
+            speed = 0.01;
+            if (player.arma.name == "shotgun"){
+                pos.x = pos.x - 0.04*cosf((angle-90) * 3.1415 / 180);
+                pos.y = pos.y - 0.04*sinf((angle-90) * 3.1415 / 180);
+            }
+            pos.x = pos.x - 0.01*cosf((angle-90) * 3.1415 / 180);
+            pos.y = pos.y - 0.01*sinf((angle-90) * 3.1415 / 180);
+
+        }
+
         if(move){
             pos.x = pos.x + speed*cosf((angle-90) * 3.1415 / 180);
             pos.y = pos.y + speed*sinf((angle-90) * 3.1415 / 180);
@@ -84,7 +103,7 @@ class Zombie{
         else{
             string todo[5] = {"turn_left", "turn_right", "none"};
             action = todo[rand()%3];
-            action_left = 1000;
+            action_left = 2000;
         }
     }
 

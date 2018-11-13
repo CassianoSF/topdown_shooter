@@ -17,9 +17,9 @@ Color  BRANCO( 1.0, 1.0, 1.0, 1.0);
 //         Item( bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
 Item flashlight( false,        "flashlight", 1,           40,       1,        1,         1,                1         );
 Item      knife( false,        "knife",      1,           20,       2,        1,         1,                1         );
-Item    handgun( true,         "handgun",    1,           30,       3,        100,       3000,             2         );
-Item    shotgun( true,         "shotgun",    1,           100,      4,        200,       7000,             6         );
-Item      rifle( true,         "rifle",      1,           40,       5,        10,        4000,             3         );
+Item    handgun( true,         "handgun",    1,           30,       3,        100,       3000,             3         );
+Item    shotgun( true,         "shotgun",    1,           100,      4,        200,       7000,             10         );
+Item      rifle( true,         "rifle",      1,           40,       5,        10,        4000,             4         );
 Item inventory[5] = {flashlight,knife,handgun,shotgun,rifle};
 Text  texto("(0,0)", BRANCO);
 Mira mira;
