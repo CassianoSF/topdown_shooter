@@ -32,7 +32,21 @@ class Zombie{
         }
     }
 
-    void update(int game_clock, int frame_time, Player player){
+    void colisionZombieZombie(Zombie other_zombie){
+        float diffx = pos.x - other_zombie.pos.x;
+        float diffy = pos.y - other_zombie.pos.y;
+        float distance = sqrt((pow(diffy, 2) + pow(diffx, 2)));
+        if (distance < 4){
+            pos.x = pos.x - speed*cosf((angle-90) * 3.1415 / 180);
+            pos.y = pos.y - speed*sinf((angle-90) * 3.1415 / 180);
+        }
+
+    }
+
+    void update(int game_clock, int frame_time, Player player, Zombie all_zombies[6]){
+        for (int i = 0; i < 6; ++i){
+            colisionZombieZombie(all_zombies[i]);
+        }
         if(game_clock % frame_time == 0){
             float diffx = player.pos.x - pos.x;
             float diffy = player.pos.y - pos.y;

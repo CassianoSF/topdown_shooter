@@ -49,6 +49,8 @@ Zombie zombie3(6,2,100,50);
 Zombie zombie4(8,4,100,50);
 Zombie zombie5(8,2,100,50);
 
+Zombie all_zombies[6] = { zombie, zombie1, zombie2, zombie3, zombie4, zombie5 };
+
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
@@ -73,31 +75,31 @@ void renderGame(void){
     obstaculo_2.render();
     player.render(game_clock, frame_time);
     zombie.render(textures, game_clock, frame_time);
-    // zombie1.render(textures, game_clock, frame_time);
-    // zombie2.render(textures, game_clock, frame_time);
-    // zombie3.render(textures, game_clock, frame_time);
-    // zombie4.render(textures, game_clock, frame_time);
-    // zombie5.render(textures, game_clock, frame_time);
+    zombie1.render(textures, game_clock, frame_time);
+    zombie2.render(textures, game_clock, frame_time);
+    zombie3.render(textures, game_clock, frame_time);
+    zombie4.render(textures, game_clock, frame_time);
+    zombie5.render(textures, game_clock, frame_time);
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
     glutSwapBuffers();
-    glutPostRedisplay();
 }
 
 void updateGame(){
-    // zombie1.update(game_clock, frame_time, player);
-    // zombie2.update(game_clock, frame_time, player);
-    // zombie3.update(game_clock, frame_time, player);
-    // zombie4.update(game_clock, frame_time, player);
-    // zombie5.update(game_clock, frame_time, player);
+    zombie.update(game_clock, frame_time, player, all_zombies);
+    zombie1.update(game_clock, frame_time, player, all_zombies);
+    zombie2.update(game_clock, frame_time, player, all_zombies);
+    zombie3.update(game_clock, frame_time, player, all_zombies);
+    zombie4.update(game_clock, frame_time, player, all_zombies);
+    zombie5.update(game_clock, frame_time, player, all_zombies);
     game_clock++;
     player.caminha(keyStates);
     player.update(game_clock, frame_time);
-    zombie.update(game_clock, frame_time, player);
     if (game_clock == (421+43)*10000){
         game_clock = 0;
     }
     
+    glutPostRedisplay();    
     // if (time_flag != game_clock / frame_time){
     //     time_flag = game_clock / frame_time;
     //     cout << game_clock / frame_time << endl;
