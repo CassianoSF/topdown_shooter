@@ -22,32 +22,33 @@ Color  BRANCO( 1.0, 1.0, 1.0, 1.0);
 //         Arma( bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
 Arma flashlight( false,        "flashlight", 1,           99999*9999, 1,        1,         1,                1         );
 Arma      knife( false,        "knife",      1,           99999*9999, 2,        1,         1,                1         );
-Arma    handgun( true,         "handgun",    1,           3*20,       3,        100,       10,               2         );
-Arma    shotgun( true,         "shotgun",    1,           3*5,        4,        200,       40,               6         );
-Arma      rifle( true,         "rifle",      1,           3*30,       5,        10,        20,               3         );
+Arma    handgun( true,         "handgun",    10,          3*20,       3,        100,       10,               2         );
+Arma    shotgun( true,         "shotgun",    50,          3*5,        4,        200,       40,               6         );
+Arma      rifle( true,         "rifle",      10,          3*30,       5,        10,        20,               3         );
 
 Arma inventory[5] = { flashlight, knife, handgun, shotgun, rifle };
 
 Text  texto("(0,0)", BRANCO);
 Mira mira;
 
-Texture textures[(421+43)];
+Texture textures[(421+43+2)];
 Coordinate origem(0,0);
 GameObject tiro(origem, textures[0], AMARELO, 100, 0.1, 0);
 GameObject obstaculo_0(Coordinate(20,-40), textures[0], VERDE, 10, 10, 10);
 GameObject obstaculo_1(Coordinate(-10,-30), textures[0], VERDE, 10, 10, 40);
 GameObject obstaculo_2(Coordinate(-2,10), textures[0], VERDE, 10, 10, -210);
+GameObject the_floor(origem, textures[0], BRANCO, 800, 800, 0);
 
 Animation player_animations[27];
 Animation zombie_animations[3];
 
 Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
-Zombie zombie(4,4,100,50);
-Zombie zombie1(14,14,100,50);
-Zombie zombie2(24,4,100,50);
-Zombie zombie3(6,2,100,50);
-Zombie zombie4(8,4,100,50);
-Zombie zombie5(8,2,100,50);
+Zombie zombie(4,4,100,50, 1);
+Zombie zombie1(14,14,100,50, 2);
+Zombie zombie2(24,4,100,50, 3);
+Zombie zombie3(6,2,100,50, 4);
+Zombie zombie4(8,4,100,50, 5);
+Zombie zombie5(8,2,100,50, 6);
 
 Zombie all_zombies[6] = { zombie, zombie1, zombie2, zombie3, zombie4, zombie5 };
 
@@ -66,7 +67,7 @@ void renderGame(void){
         glTranslatef(-player.pos.x+0.11, -player.pos.y+0.11, -35);      // Posiciona o senário deslocado da camera    
     else
         glTranslatef(-player.pos.x, -player.pos.y, -35);      // Posiciona o senário deslocado da camera
-
+    the_floor.render();
     // Renderiza objetos
     mira.render(player.pos.x, player.pos.y);
     texto.render(player.pos.x, player.pos.y);
@@ -74,12 +75,12 @@ void renderGame(void){
     obstaculo_1.render();
     obstaculo_2.render();
     player.render(game_clock, frame_time);
-    zombie.render(textures, game_clock, frame_time);
-    zombie1.render(textures, game_clock, frame_time);
-    zombie2.render(textures, game_clock, frame_time);
-    zombie3.render(textures, game_clock, frame_time);
-    zombie4.render(textures, game_clock, frame_time);
-    zombie5.render(textures, game_clock, frame_time);
+    zombie.render(game_clock, frame_time);
+    zombie1.render(game_clock, frame_time);
+    zombie2.render(game_clock, frame_time);
+    zombie3.render(game_clock, frame_time);
+    zombie4.render(game_clock, frame_time);
+    zombie5.render(game_clock, frame_time);
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
     glutSwapBuffers();
@@ -95,7 +96,7 @@ void updateGame(){
     game_clock++;
     player.caminha(keyStates);
     player.update(game_clock, frame_time);
-    if (game_clock == (421+43)*10000){
+    if (game_clock == (421+43+2)*10000){
         game_clock = 0;
     }
     
@@ -123,7 +124,6 @@ void mouseClick(int button, int state, int x, int y){
 }
 
 void mouseMove(int x, int y){
-    player.run = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
     player.rotate(x,y);
     mira.update(x,y);
     char temp[100];
@@ -137,7 +137,7 @@ void mouseDrag(int x, int y){
 }
 
 void loadAnimations(){
-    for (int i = 0; i < 421+43; ++i){
+    for (int i = 0; i < 421+43+2; ++i){
         if(textures[i].animation == "shoot_texture"){   
             player_animations[SHOOT_TEXTURE].textures[textures[i].index] = textures[i];
             player_animations[SHOOT_TEXTURE].frames++;
@@ -303,8 +303,8 @@ void loadAnimations(){
 
 void loadTextures(){
     glClearColor(0,0,0,1);
-    std::string path = "./_player/";
-    string path_string_array[(421+43)];
+    std::string path = "./textures/";
+    string path_string_array[(421+43+2)];
     string str_filename; 
     int i = 0;
     for (auto & p : fs::directory_iterator(path)){
@@ -354,6 +354,7 @@ void loadTextures(){
                 regex_search(str_filename, m, regex("skeleton-idle"));          for(auto v: m){textures[i].animation = "skeleton_idle";} 
                 regex_search(str_filename, m, regex("skeleton-attack"));        for(auto v: m){textures[i].animation = "skeleton_attack";} 
                 regex_search(str_filename, m, regex("skeleton-move"));          for(auto v: m){textures[i].animation = "skeleton_move";} 
+                regex_search(str_filename, m, regex("the_floor/floor"));        for(auto v: m){the_floor.texture = textures[i];} 
                 cout << "Loading...  " << str_filename << endl;
                 i++;
             }

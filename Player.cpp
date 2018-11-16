@@ -80,8 +80,12 @@ class Player {
     }
 
     void actionShoot(){
-        shoot = true;
-        rand_offset = (rand() % arma.accuracy) - 2.5;
+        if (arma.bullets == 0){
+            actionReload();
+        }else{
+            shoot = true;
+            rand_offset = (rand() % arma.accuracy) - 2.5;
+        }
     }
 
     void actionChangeItem(int num){
@@ -100,8 +104,9 @@ class Player {
 
     void update(int game_clock, int frame_time){
         if(game_clock % frame_time == 0){
-            cout << arma.bullets << endl;
-            cout << reload_left << endl;
+            cout << "AMMO: " << arma.bullets << endl;
+            cout << "TIME: " << reload_left << endl;
+            cout << "COND: " << (reload && arma.reload_time && reload_left) << endl;
             if(attack){
                 if(arma.name == "flashlight"){ animation = FLASHLIGHT_MELEEATTACK; }
                 if(arma.name == "knife")     { animation = KNIFE_MELEEATTACK;      }
@@ -186,8 +191,6 @@ class Player {
 
     bool didShoot(int game_clock, int frame_time){
         if (arma.bullets == 0){
-            reload = true;
-            shoot = false;
             return false;
         }
         if(shoot && !reload && game_clock/arma.rate % (frame_time/10) == 0){
