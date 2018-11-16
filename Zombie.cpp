@@ -54,28 +54,29 @@ class Zombie{
         }
         if(!died){
 
-            if(game_clock % frame_time == 0){
-                float diffx = player.pos.x - pos.x;
-                float diffy = player.pos.y - pos.y;
-                float distance        = sqrt((pow(diffy, 2) + pow(diffx, 2)));
-                float angle_to_player = angle - ((-(GLfloat)atan2(diffx, diffy)/3.1415*180.0));
-                bool cond = ((angle_to_player < -145 && angle_to_player > -220) || (angle_to_player > 145 && angle_to_player < 220)) && distance < 15;
-                if(cond){
-                    action = "follow";
-                    action_left = 10000;
-                    move = true;
-                    idle = false;
-                    if (distance < 2){
-                        attack = true;
-                    }else{
-                        attack = false;
-                    }
+            float diffx = player.pos.x - pos.x;
+            float diffy = player.pos.y - pos.y;
+            float distance        = sqrt((pow(diffy, 2) + pow(diffx, 2)));
+            float angle_to_player = angle - ((-(GLfloat)atan2(diffx, diffy)/3.1415*180.0));
+            bool cond = ((angle_to_player < -145 && angle_to_player > -220) || (angle_to_player > 145 && angle_to_player < 220)) && distance < 15;
+            if(cond){
+                action = "follow";
+                action_left = 10000;
+                move = true;
+                idle = false;
+                if (distance < 2){
+                    attack = true;
+                }else{
+                    attack = false;
                 }
+            }
 
-                float diffx2 = pos.x - player.pos.x;
-                float diffy2 = pos.y - player.pos.y;
-                float angle_to_zombie = player.inclinacao - ((-(GLfloat)atan2(diffx2, diffy2)/3.1415*180.0));
-                bool on_player_sight = angle_to_zombie < 90+player.arma.accuracy+5 && angle_to_zombie > 90-player.arma.accuracy;
+            float diffx2 = pos.x - player.pos.x;
+            float diffy2 = pos.y - player.pos.y;
+            float angle_to_zombie = player.inclinacao - ((-(GLfloat)atan2(diffx2, diffy2)/3.1415*180.0));
+            bool on_player_sight = angle_to_zombie < 90+player.arma.accuracy+5 && angle_to_zombie > 90-player.arma.accuracy;
+
+            if(game_clock % frame_time == 0){
                 if (on_player_sight && player.didShoot(game_clock, frame_time)){
                     life -= player.arma.damage;
                     take_hit = true;
@@ -101,7 +102,7 @@ class Zombie{
                 pos.y = pos.y - 0.02*sinf((angle-90) * 3.1415 / 180);
             }
 
-            if(move){
+            if(move && distance > 1){
                 pos.x = pos.x + speed*cosf((angle-90) * 3.1415 / 180);
                 pos.y = pos.y + speed*sinf((angle-90) * 3.1415 / 180);
             }
