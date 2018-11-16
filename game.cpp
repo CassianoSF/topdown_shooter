@@ -38,6 +38,7 @@ GameObject obstaculo_0(Coordinate(20,-40), textures[0], VERDE, 10, 10, 10);
 GameObject obstaculo_1(Coordinate(-10,-30), textures[0], VERDE, 10, 10, 40);
 GameObject obstaculo_2(Coordinate(-2,10), textures[0], VERDE, 10, 10, -210);
 GameObject the_floor(origem, textures[0], BRANCO, 800, 800, 0);
+GameObject blood(origem, textures[0], BRANCO, 5, 5, 0);
 
 Animation player_animations[27];
 Animation zombie_animations[3];
@@ -67,7 +68,7 @@ void renderGame(void){
         glTranslatef(-player.pos.x+0.11, -player.pos.y+0.11, -35);      // Posiciona o senário deslocado da camera    
     else
         glTranslatef(-player.pos.x, -player.pos.y, -35);      // Posiciona o senário deslocado da camera
-    the_floor.render();
+    the_floor.render_floor();
     // Renderiza objetos
     mira.render(player.pos.x, player.pos.y);
     texto.render(player.pos.x, player.pos.y);
@@ -75,12 +76,12 @@ void renderGame(void){
     obstaculo_1.render();
     obstaculo_2.render();
     player.render(game_clock, frame_time);
-    zombie.render(game_clock, frame_time);
-    zombie1.render(game_clock, frame_time);
-    zombie2.render(game_clock, frame_time);
-    zombie3.render(game_clock, frame_time);
-    zombie4.render(game_clock, frame_time);
-    zombie5.render(game_clock, frame_time);
+    zombie.render(game_clock, frame_time, blood);
+    zombie1.render(game_clock, frame_time, blood);
+    zombie2.render(game_clock, frame_time, blood);
+    zombie3.render(game_clock, frame_time, blood);
+    zombie4.render(game_clock, frame_time, blood);
+    zombie5.render(game_clock, frame_time, blood);
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
     glutSwapBuffers();
@@ -355,6 +356,7 @@ void loadTextures(){
                 regex_search(str_filename, m, regex("skeleton-attack"));        for(auto v: m){textures[i].animation = "skeleton_attack";} 
                 regex_search(str_filename, m, regex("skeleton-move"));          for(auto v: m){textures[i].animation = "skeleton_move";} 
                 regex_search(str_filename, m, regex("the_floor/floor"));        for(auto v: m){the_floor.texture = textures[i];} 
+                regex_search(str_filename, m, regex("the_floor/blood"));        for(auto v: m){blood.texture = textures[i];} 
                 cout << "Loading...  " << str_filename << endl;
                 i++;
             }

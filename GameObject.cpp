@@ -22,6 +22,26 @@ class GameObject{
                 glColor4f(color.r, color.g, color.b, color.a);
                 glTexCoord2f(0.0, 0.0);
                 glVertex2f( width/2,  height/2);
+                glTexCoord2f(0.0, 1.0);
+                glVertex2f( width/2, -height/2);
+                glTexCoord2f(1.0, 1.0);
+                glVertex2f(-width/2, -height/2);
+                glTexCoord2f(1.0, 0.0);
+                glVertex2f(-width/2,  height/2);
+            glEnd();
+        glPopMatrix();
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    void render_floor(){
+        glPushMatrix();
+            glTranslatef(pos.x, pos.y , 0);
+            glRotatef(angle-90, 0, 0, 1);
+            texture.render();
+            glBegin(GL_POLYGON);
+                glColor4f(color.r, color.g, color.b, color.a);
+                glTexCoord2f(0.0, 0.0);
+                glVertex2f( width/2,  height/2);
                 glTexCoord2f(0.0, 30.0);
                 glVertex2f( width/2, -height/2);
                 glTexCoord2f(30.0, 30.0);

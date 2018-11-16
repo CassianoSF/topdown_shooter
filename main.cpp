@@ -56,12 +56,12 @@ using namespace std;
 #include "Coordinate.cpp"
 #include "Color.cpp"
 #include "Texture.cpp"
+#include "GameObject.cpp"
 #include "Animation.cpp"
 #include "Text.cpp"
 #include "Arma.cpp"
 #include "Mira.cpp"
 #include "Player.cpp"
 #include "Zombie.cpp"
-#include "GameObject.cpp"
 #include "game.cpp"
 

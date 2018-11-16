@@ -132,7 +132,12 @@ class Zombie{
     }
 
 
-    void render(int game_clock, int frame_time){
+    void render(int game_clock, int frame_time, GameObject blood){
+        if(take_hit){
+            blood.pos.x = pos.x;
+            blood.pos.y = pos.y;
+            blood.render();
+        }
         if(!died){
             glPushMatrix();
                 glTranslatef(pos.x, pos.y, -1.0);
