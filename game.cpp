@@ -3,7 +3,7 @@ int* keyStates = new int[256]; // Estado das teclas 0 e 1
 int screen_w = 1000;           // largura da tela
 int screen_h = 700;            // altura da tela
 int game_clock = 0;            // incremento do updateGame
-int frame_time = 100;          // divisor do clock (frame window)
+int frame_time = 50;          // divisor do clock (frame window)
 int time_flag = 0;             // flag de atualização
 
 
@@ -19,16 +19,16 @@ Color  AMARELO(1.0, 1.0, 0.0, 1.0);
 Color    PRETO(0.0, 0.0, 0.0, 1.0);
 Color  LARANJA(1.0, 0.6, 0.3, 1.0);
 Color  BRANCO( 1.0, 1.0, 1.0, 1.0);
-//         Arma( bool _shoot,  string _name, int _damage, int _cap, int _num, int _rate, int _reload_time, int _accuracy){
-Arma flashlight( false,        "flashlight", 1,           99999*9999, 1,        1,         1,                1         );
-Arma      knife( false,        "knife",      1,           99999*9999, 2,        1,         1,                1         );
-Arma    handgun( true,         "handgun",    10,          3*20,       3,        100,       10,               2         );
-Arma    shotgun( true,         "shotgun",    50,          3*5,        4,        200,       40,               6         );
-Arma      rifle( true,         "rifle",      10,          3*30,       5,        10,        20,               3         );
+//         Arma( bool _shoot,  string _name, int _damage, int _cap,    int _num, int _rate, int _reload_time, int _accuracy){
+Arma flashlight( false,        "flashlight", 1,           99999*9999,  1,        1,         1,                1         );
+Arma      knife( false,        "knife",      1,           99999*9999,  2,        1,         1,                1         );
+Arma    handgun( true,         "handgun",    10,          12*20,       3,        100,       10,               2         );
+Arma    shotgun( true,         "shotgun",    50,          12*5,        4,        200,       40,               6         );
+Arma      rifle( true,         "rifle",      10,          3*30,        5,        10,        20,               3         );
 
 Arma inventory[5] = { flashlight, knife, handgun, shotgun, rifle };
 
-Text  texto("(0,0)", BRANCO);
+Text  texto("", BRANCO);
 Mira mira;
 
 Texture textures[(421+43+2)];
@@ -37,7 +37,7 @@ GameObject tiro(origem, textures[0], AMARELO, 100, 0.1, 0);
 GameObject obstaculo_0(Coordinate(20,-40), textures[0], VERDE, 10, 10, 10);
 GameObject obstaculo_1(Coordinate(-10,-30), textures[0], VERDE, 10, 10, 40);
 GameObject obstaculo_2(Coordinate(-2,10), textures[0], VERDE, 10, 10, -210);
-GameObject the_floor(origem, textures[0], BRANCO, 800, 800, 0);
+GameObject the_floor(origem, textures[0], BRANCO, 8000, 8000, 0);
 GameObject blood(origem, textures[0], BRANCO, 5, 5, 0);
 
 Animation player_animations[27];
@@ -51,7 +51,7 @@ Zombie zombie3(6,2,100,50, 4);
 Zombie zombie4(8,4,100,50, 5);
 Zombie zombie5(8,2,100,50, 6);
 
-Zombie all_zombies[6] = { zombie, zombie1, zombie2, zombie3, zombie4, zombie5 };
+Zombie all_zombies[] = { zombie, zombie1, zombie2, zombie3, zombie4, zombie5 };
 
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
@@ -88,6 +88,8 @@ void renderGame(void){
 }
 
 void updateGame(){
+    texto.set_texto(to_string(player.arma.bullets/3));
+    
     zombie.update(game_clock, frame_time, player, all_zombies);
     zombie1.update(game_clock, frame_time, player, all_zombies);
     zombie2.update(game_clock, frame_time, player, all_zombies);
@@ -102,10 +104,6 @@ void updateGame(){
     }
     
     glutPostRedisplay();    
-    // if (time_flag != game_clock / frame_time){
-    //     time_flag = game_clock / frame_time;
-    //     cout << game_clock / frame_time << endl;
-    // }
 }
 
 void keyDown(unsigned char key, int x, int y){
@@ -127,9 +125,6 @@ void mouseClick(int button, int state, int x, int y){
 void mouseMove(int x, int y){
     player.rotate(x,y);
     mira.update(x,y);
-    char temp[100];
-    sprintf(temp, " (%d, %d)  %f", x, y, player.inclinacao);
-    texto.set_texto(temp);
 }
 
 void mouseDrag(int x, int y){

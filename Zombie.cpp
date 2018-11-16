@@ -155,22 +155,6 @@ class Zombie{
                     glVertex2f(  2.0,-2.0);
                     glEnd();
                 glDisable(GL_TEXTURE_2D);
-                glPushMatrix();
-                    // glRotatef(-45, 0, 0, 0);
-                    glBegin(GL_POLYGON);
-                        glColor4f(1, 1, 0, 0.1);
-                        glVertex2f(0, 0);
-                         for(int i = -3; i < 27; i++){
-                            if (i < 3){
-                                float theta = 2.0f * 3.1415926f * float(i) / float(30);
-                                float cx = 15 * cosf(theta);
-                                float cy = 15 * sinf(theta);
-                                glVertex2f(cx, cy);
-                            }
-                        }
-                        glVertex2f(0, 0);
-                    glEnd();
-                glPopMatrix();
             glPopMatrix();
         }
     }

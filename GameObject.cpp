@@ -42,11 +42,11 @@ class GameObject{
                 glColor4f(color.r, color.g, color.b, color.a);
                 glTexCoord2f(0.0, 0.0);
                 glVertex2f( width/2,  height/2);
-                glTexCoord2f(0.0, 30.0);
+                glTexCoord2f(0.0, 300.0);
                 glVertex2f( width/2, -height/2);
-                glTexCoord2f(30.0, 30.0);
+                glTexCoord2f(300.0, 300.0);
                 glVertex2f(-width/2, -height/2);
-                glTexCoord2f(30.0, 0.0);
+                glTexCoord2f(300.0, 0.0);
                 glVertex2f(-width/2,  height/2);
             glEnd();
         glPopMatrix();
