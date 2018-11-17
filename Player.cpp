@@ -104,9 +104,6 @@ class Player {
 
     void update(int game_clock, int frame_time){
         if(game_clock % frame_time == 0){
-            cout << "AMMO: " << arma.bullets << endl;
-            cout << "TIME: " << reload_left << endl;
-            cout << "COND: " << (reload && arma.reload_time && reload_left) << endl;
             if(attack){
                 if(arma.name == "flashlight"){ animation = FLASHLIGHT_MELEEATTACK; }
                 if(arma.name == "knife")     { animation = KNIFE_MELEEATTACK;      }

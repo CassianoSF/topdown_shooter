@@ -5,7 +5,7 @@ int screen_h = 700;            // altura da tela
 int game_clock = 0;            // incremento do updateGame
 int frame_time = 50;          // divisor do clock (frame window)
 int time_flag = 0;             // flag de atualização
-
+int level = 1;
 
 // MODELS
 
@@ -31,7 +31,7 @@ Arma inventory[5] = { flashlight, knife, handgun, shotgun, rifle };
 Text  texto("", BRANCO);
 Mira mira;
 
-Texture textures[(421+43+2)];
+Texture textures[(421+43+3)];
 Coordinate origem(0,0);
 GameObject tiro(origem, textures[0], AMARELO, 100, 0.1, 0);
 GameObject obstaculo_0(Coordinate(20,-40), textures[0], VERDE, 10, 10, 10);
@@ -44,20 +44,38 @@ Animation player_animations[27];
 Animation zombie_animations[3];
 
 Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
-Zombie zombie(4,4,100,50, 1);
-Zombie zombie1(14,14,100,50, 2);
-Zombie zombie2(24,4,100,50, 3);
-Zombie zombie3(6,2,100,50, 4);
-Zombie zombie4(8,4,100,50, 5);
-Zombie zombie5(8,2,100,50, 6);
 
-Zombie all_zombies[] = { zombie, zombie1, zombie2, zombie3, zombie4, zombie5 };
+
+int zombies_size = 0;
+Zombie* zombies = new Zombie[zombies_size];
+
 
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
 //################    ##################    ###################    ##################
 
+void random_zombies(int _level){
+    int temp_zombies_size = _level;
+    Zombie* temp_zombies = new Zombie[temp_zombies_size];
+    for (int i = 0; i < zombies_size; i++){
+        cout << "1 : " << i << endl;
+        temp_zombies[i] = zombies[i];
+    }
+    for (int i = zombies_size; i < temp_zombies_size; i++){
+        cout << "2 : " << i << endl;
+        temp_zombies[i].set(
+            (rand() % 100)-50,
+            (rand() % 100)-50,
+            100,
+            50,
+            i
+        );
+    }
+    delete [] zombies;
+    zombies_size = temp_zombies_size;
+    zombies = temp_zombies;
+}
 
 
 // REDERIZAÇÃO
@@ -76,12 +94,10 @@ void renderGame(void){
     obstaculo_1.render();
     obstaculo_2.render();
     player.render(game_clock, frame_time);
-    zombie.render(game_clock, frame_time, blood);
-    zombie1.render(game_clock, frame_time, blood);
-    zombie2.render(game_clock, frame_time, blood);
-    zombie3.render(game_clock, frame_time, blood);
-    zombie4.render(game_clock, frame_time, blood);
-    zombie5.render(game_clock, frame_time, blood);
+    for (int i = 0; i < zombies_size; ++i){
+        zombies[i].render(game_clock, frame_time, blood, zombie_animations);
+    }
+
     // Requisita que o buffer usado para as operações de renderização seja exibido na tela
     glFlush();  
     glutSwapBuffers();
@@ -90,17 +106,29 @@ void renderGame(void){
 void updateGame(){
     texto.set_texto(to_string(player.arma.bullets/3));
     
-    zombie.update(game_clock, frame_time, player, all_zombies);
-    zombie1.update(game_clock, frame_time, player, all_zombies);
-    zombie2.update(game_clock, frame_time, player, all_zombies);
-    zombie3.update(game_clock, frame_time, player, all_zombies);
-    zombie4.update(game_clock, frame_time, player, all_zombies);
-    zombie5.update(game_clock, frame_time, player, all_zombies);
+    for (int i = 0; i < zombies_size; ++i){
+        zombies[i].update(game_clock, frame_time, player, zombies);
+    }
     game_clock++;
     player.caminha(keyStates);
     player.update(game_clock, frame_time);
-    if (game_clock == (421+43+2)*10000){
+    if (game_clock == (421+43+3)*10000){
         game_clock = 0;
+    }
+
+
+    // if (game_clock % frame_time == 0){
+    //     time_flag ++;
+    //     cout << time_flag << endl;
+    // }
+    if(game_clock == 1){
+        level++;
+        random_zombies(level);
+    }
+    
+    if(game_clock%5000 == 0){
+        level++;
+        random_zombies(level);
     }
     
     glutPostRedisplay();    
@@ -133,7 +161,7 @@ void mouseDrag(int x, int y){
 }
 
 void loadAnimations(){
-    for (int i = 0; i < 421+43+2; ++i){
+    for (int i = 0; i < 421+43+3; ++i){
         if(textures[i].animation == "shoot_texture"){   
             player_animations[SHOOT_TEXTURE].textures[textures[i].index] = textures[i];
             player_animations[SHOOT_TEXTURE].frames++;
@@ -289,18 +317,12 @@ void loadAnimations(){
         }
     }
     player.setAnimations(player_animations);
-    zombie.setAnimations(zombie_animations);
-    zombie1.setAnimations(zombie_animations);
-    zombie2.setAnimations(zombie_animations);
-    zombie3.setAnimations(zombie_animations);
-    zombie4.setAnimations(zombie_animations);
-    zombie5.setAnimations(zombie_animations);
 }
 
 void loadTextures(){
     glClearColor(0,0,0,1);
     std::string path = "./textures/";
-    string path_string_array[(421+43+2)];
+    string path_string_array[(421+43+3)];
     string str_filename; 
     int i = 0;
     for (auto & p : fs::directory_iterator(path)){
@@ -352,6 +374,11 @@ void loadTextures(){
                 regex_search(str_filename, m, regex("skeleton-move"));          for(auto v: m){textures[i].animation = "skeleton_move";} 
                 regex_search(str_filename, m, regex("the_floor/floor"));        for(auto v: m){the_floor.texture = textures[i];} 
                 regex_search(str_filename, m, regex("the_floor/blood"));        for(auto v: m){blood.texture = textures[i];} 
+                regex_search(str_filename, m, regex("/crate"));                 for(auto v: m){
+                    obstaculo_0.texture = textures[i];
+                    obstaculo_1.texture = textures[i];
+                    obstaculo_2.texture = textures[i];
+                } 
                 cout << "Loading...  " << str_filename << endl;
                 i++;
             }

@@ -16,6 +16,7 @@
 #include <GLFW/glfw3.h>
 #include <experimental/filesystem>
 #include <regex>
+#include <vector>
 
 #define          SHOOT_TEXTURE 0
 #define FLASHLIGHT_MELEEATTACK 1
