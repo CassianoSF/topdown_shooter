@@ -59,17 +59,16 @@ void random_zombies(int _level){
     int temp_zombies_size = _level;
     Zombie* temp_zombies = new Zombie[temp_zombies_size];
     for (int i = 0; i < zombies_size; i++){
-        cout << "1 : " << i << endl;
         temp_zombies[i] = zombies[i];
     }
     for (int i = zombies_size; i < temp_zombies_size; i++){
-        cout << "2 : " << i << endl;
         temp_zombies[i].set(
             (rand() % 100)-50,
             (rand() % 100)-50,
             100,
             50,
-            i
+            i,
+            0.004 * _level
         );
     }
     delete [] zombies;

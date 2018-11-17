@@ -16,7 +16,7 @@ class Zombie{
 
     Zombie(){}
 
-    Zombie(float _x, float _y, int _life, int _angle, int _id){
+    Zombie(float _x, float _y, int _life, int _angle, int _id, float _speed){
         id = _id;
         pos.x = _x;
         pos.y = _y;
@@ -25,12 +25,12 @@ class Zombie{
         idle = true;
         // move = true;
         action_left = 0;
-        speed = 0.001;
+        speed = _speed;
         animation = SKELETON_IDLE;
         distance = 10;
     }
 
-    void set(float _x, float _y, int _life, int _angle, int _id){
+    void set(float _x, float _y, int _life, int _angle, int _id, float _speed){
         id = _id;
         pos.x = _x;
         pos.y = _y;
@@ -39,7 +39,7 @@ class Zombie{
         idle = true;
         // move = true;
         action_left = 0;
-        speed = 0.001;
+        speed = _speed;
         animation = SKELETON_IDLE;
 
     }
@@ -107,7 +107,6 @@ class Zombie{
                 if(take_hit){
                     action = "follow";
                     move = true;
-                    speed = 0.01;
                     if (player.arma.name == "shotgun"){
                         pos.x = pos.x - 0.03*cosf((angle-90) * 3.1415 / 180);
                         pos.y = pos.y - 0.03*sinf((angle-90) * 3.1415 / 180);
