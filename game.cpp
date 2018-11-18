@@ -28,7 +28,6 @@ Arma      rifle( true,         "rifle",      10,          3*30,        5,       
 
 Arma inventory[5] = { flashlight, knife, handgun, shotgun, rifle };
 
-Text  texto("", BRANCO);
 Mira mira;
 
 Texture textures[(421+43+3)];
@@ -44,8 +43,10 @@ Animation player_animations[27];
 Animation zombie_animations[3];
 
 GameObject objs[] = {obstaculo_0, obstaculo_1, obstaculo_2};
-
+int objs_size = 3;
 Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
+Text  ammo("", BRANCO, -20, 18);
+Text  life("", BRANCO, -20, 16);
 
 
 int zombies_size = 0;
@@ -58,15 +59,15 @@ Zombie* zombies = new Zombie[zombies_size];
 //################    ##################    ###################    ##################
 
 void random_zombies(int _level){
-    int temp_zombies_size = _level;
+    int temp_zombies_size = _level*3;
     Zombie* temp_zombies = new Zombie[temp_zombies_size];
     for (int i = 0; i < zombies_size; i++){
         temp_zombies[i] = zombies[i];
     }
     for (int i = zombies_size; i < temp_zombies_size; i++){
         temp_zombies[i].set(
-            (rand() % 100)-50,
-            (rand() % 100)-50,
+            (rand() % 10)-5,
+            (rand() % 10)-5,
             100,
             50,
             i,
@@ -90,7 +91,8 @@ void renderGame(void){
     the_floor.render_floor();
     // Renderiza objetos
     mira.render(player.pos.x, player.pos.y);
-    texto.render(player.pos.x, player.pos.y);
+    ammo.render(player.pos.x, player.pos.y);
+    life.render(player.pos.x, player.pos.y);
     obstaculo_0.render();
     obstaculo_1.render();
     obstaculo_2.render();
@@ -105,29 +107,20 @@ void renderGame(void){
 }
 
 void updateGame(){
-    texto.set_texto(to_string(player.arma.bullets/3));
-    
+    ammo.set_texto(to_string(player.arma.bullets/3));
+    life.set_texto(to_string(player.life));
     for (int i = 0; i < zombies_size; ++i){
-        zombies[i].update(game_clock, frame_time, player, zombies);
+        zombies[i].update(game_clock, frame_time, player, zombies, objs, objs_size);
     }
     game_clock++;
-    player.caminha(keyStates, objs);
+    player.caminha(keyStates, objs, objs_size);
     player.update(game_clock, frame_time);
     if (game_clock == (421+43+3)*10000){
         game_clock = 0;
     }
 
-
-    // if (game_clock % frame_time == 0){
-    //     time_flag ++;
-    //     cout << time_flag << endl;
-    // }
-    if(game_clock == 1){
-        level++;
-        random_zombies(level);
-    }
     
-    if(game_clock%5000 == 0){
+    if(game_clock%5000 == 1){
         level++;
         random_zombies(level);
     }

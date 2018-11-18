@@ -5,6 +5,7 @@ class Player {
     int animation_frames;
     int reload_left;
     int shoot_left;
+    int life;
     float rand_offset, inclinacao;
     int animation, legs;
     Arma arma;
@@ -28,6 +29,7 @@ class Player {
         for (int i = 0; i < 5; ++i){
             inventory[i] = _inventory[i];
         }
+        life = 100;
     }
 
     void setAnimations(Animation _animations[27]){
@@ -159,8 +161,8 @@ class Player {
     }
 
 
-    bool colideObj(GameObject objs[], float x_ahead, float y_ahead){
-        for (int i = 0; i < 3; ++i){
+    bool colideObj(GameObject objs[], int objs_size, float x_ahead, float y_ahead){
+        for (int i = 0; i < objs_size; ++i){
             float dx = objs[i].pos.x - pos.x + x_ahead;
             float dy = objs[i].pos.y - pos.y + y_ahead;
             float distance = sqrt((pow(dy, 2) + pow(dx, 2)));
@@ -170,11 +172,11 @@ class Player {
             if((angle_to>135 && angle_to<225) ||
                (angle_to>0   && angle_to<45)  ||
                (angle_to>315 && angle_to<360)){
-                if(distance < ((objs[i].height/2.0)*(1.0+sqrt(pow(sinf(angle_to*3.1415/180), 2))))){
+                if(distance < ((objs[i].height/2.0)*(1.1+0.5*sqrt(pow(sinf(angle_to*3.1415/180), 2))))){
                     return true;
                 }
             }else{
-                if(distance < ((objs[i].height/2.0)*(1.0+sqrt(pow(cosf(angle_to*3.1415/180), 2))))){
+                if(distance < ((objs[i].height/2.0)*(1.1+0.5*sqrt(pow(cosf(angle_to*3.1415/180), 2))))){
                     return true;
                 }
             }
@@ -182,7 +184,7 @@ class Player {
         return false;
     }
 
-    void caminha(int* keyStates, GameObject objs[]){
+    void caminha(int* keyStates, GameObject objs[], int objs_size){
         float speed_mult = 0.01;
         if (run)
             speed_mult = 0.017;
@@ -202,10 +204,10 @@ class Player {
         }else{
             velocidade = speed_mult;
         }
-        if(keyStates['w'] || keyStates['W'] ){ if(colideObj(objs, 0, -velocidade)){pos.y -= velocidade;}else{pos.y += velocidade;}}
-        if(keyStates['s'] || keyStates['S'] ){ if(colideObj(objs, 0, +velocidade)){pos.y += velocidade;}else{pos.y -= velocidade;}}
-        if(keyStates['a'] || keyStates['A'] ){ if(colideObj(objs, +velocidade, 0)){pos.x += velocidade;}else{pos.x -= velocidade;}}
-        if(keyStates['d'] || keyStates['D'] ){ if(colideObj(objs, -velocidade, 0)){pos.x -= velocidade;}else{pos.x += velocidade;}}
+        if(keyStates['w'] || keyStates['W'] ){ if(colideObj(objs, objs_size, 0, -velocidade)){pos.y -= velocidade;}else{pos.y += velocidade;}}
+        if(keyStates['s'] || keyStates['S'] ){ if(colideObj(objs, objs_size, 0, +velocidade)){pos.y += velocidade;}else{pos.y -= velocidade;}}
+        if(keyStates['a'] || keyStates['A'] ){ if(colideObj(objs, objs_size, +velocidade, 0)){pos.x += velocidade;}else{pos.x -= velocidade;}}
+        if(keyStates['d'] || keyStates['D'] ){ if(colideObj(objs, objs_size, -velocidade, 0)){pos.x -= velocidade;}else{pos.x += velocidade;}}
     }
 
     void rotate(int x, int y){

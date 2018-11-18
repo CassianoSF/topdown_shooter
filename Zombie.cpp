@@ -58,7 +58,31 @@ class Zombie{
 
     // }
 
-    void update(int game_clock, int frame_time, Player player, Zombie all_zombies[]){
+    bool colideObj(GameObject objs[], int objs_size, float x_ahead, float y_ahead){
+        for (int i = 0; i < objs_size; ++i){
+            float dx = objs[i].pos.x - pos.x + x_ahead;
+            float dy = objs[i].pos.y - pos.y + y_ahead;
+            float distance = sqrt((pow(dy, 2) + pow(dx, 2)));
+            float angle_to = -(objs[i].angle - ((-(GLfloat)atan2(dx, dy)/3.1415*180.0)));
+            if (angle_to>360){angle_to -=360;}
+            if (angle_to<0)  {angle_to +=360;}
+            if((angle_to>135 && angle_to<225) ||
+               (angle_to>0   && angle_to<45)  ||
+               (angle_to>315 && angle_to<360)){
+                if(distance < ((objs[i].height/2.0)*(0.5+0.5*sqrt(pow(sinf(angle_to*3.1415/180), 2))))){
+                    return true;
+                }
+            }else{
+                if(distance < ((objs[i].height/2.0)*(0.5+0.5*sqrt(pow(cosf(angle_to*3.1415/180), 2))))){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    void update(int game_clock, int frame_time, Player player, Zombie all_zombies[], GameObject objs[], int objs_size){
         if(life < 0){
             died = true;
         }
@@ -78,6 +102,7 @@ class Zombie{
                     idle = false;
                     if (distance < 2){
                         attack = true;
+                        player.life -=1;
                     }else{
                         attack = false;
                     }
@@ -85,8 +110,9 @@ class Zombie{
 
                 float diffx2 = pos.x - player.pos.x;
                 float diffy2 = pos.y - player.pos.y;
-                float angle_to_zombie = player.inclinacao - ((-(GLfloat)atan2(diffx2, diffy2)/3.1415*180.0));
-                bool on_player_sight = angle_to_zombie < 90+player.arma.accuracy+5 && angle_to_zombie > 90-player.arma.accuracy;
+                float angle_to_zombie = int(player.inclinacao - ((-(GLfloat)atan2(diffx2, diffy2)/3.1415*180.0))) % 360;
+                bool on_player_sight = (angle_to_zombie < 90+player.arma.accuracy+5 && angle_to_zombie > 90-player.arma.accuracy) ||
+                                       (angle_to_zombie > 45 && angle_to_zombie < 135 && distance < 4);
                 if (on_player_sight && player.didShoot(game_clock, frame_time)){
                     life -= player.arma.damage;
                     take_hit = true;
@@ -99,51 +125,51 @@ class Zombie{
                 else if(move){animation = SKELETON_MOVE;}
                 else if(idle){animation = SKELETON_IDLE;}
             }
-
-            if(game_clock%3==0){
-
-
             
-                if(take_hit){
-                    action = "follow";
-                    move = true;
-                    if (player.arma.name == "shotgun"){
-                        pos.x = pos.x - 0.03*cosf((angle-90) * 3.1415 / 180);
-                        pos.y = pos.y - 0.03*sinf((angle-90) * 3.1415 / 180);
-                    }
-                    pos.x = pos.x - 0.02*cosf((angle-90) * 3.1415 / 180);
-                    pos.y = pos.y - 0.02*sinf((angle-90) * 3.1415 / 180);
+            if(take_hit){
+                action = "follow";
+                move = true;
+                if (player.arma.name == "shotgun"){
+                    pos.x = pos.x - 0.03*cosf((angle-90) * 3.1415 / 180);
+                    pos.y = pos.y - 0.03*sinf((angle-90) * 3.1415 / 180);
+                }
+                pos.x = pos.x - 0.02*cosf((angle-90) * 3.1415 / 180);
+                pos.y = pos.y - 0.02*sinf((angle-90) * 3.1415 / 180);
+            }
+
+            if(move && distance > 1){
+                float x_ahead = speed*cosf((angle-90) * 3.1415 / 180);
+                float y_ahead = speed*sinf((angle-90) * 3.1415 / 180);
+                if(!colideObj(objs, objs_size, x_ahead, y_ahead)){
+                    pos.x = pos.x + x_ahead;
+                    pos.y = pos.y + y_ahead;
+                }else{
+                    string todo[2] = {"turn_left", "turn_right"};
+                    action = todo[rand()%2];
                 }
 
-                if(move && distance > 1){
-                    pos.x = pos.x + speed*cosf((angle-90) * 3.1415 / 180);
-                    pos.y = pos.y + speed*sinf((angle-90) * 3.1415 / 180);
+            }
+            if(angle == 360 || angle == -360)
+                angle = 0;
+            if(action_left){ 
+                action_left--;
+                if (action == "turn_left"){
+                    angle = angle + 0.05;
+                }else if(action == "turn_right"){
+                    angle = angle - 0.05;
+                }else if(action == "follow"){
+                    float diffx = player.pos.x - pos.x;
+                    float diffy = player.pos.y - pos.y;
+                    float angle_to_player = (-(GLfloat)atan2(diffx, diffy)/3.1415*180.0)-180;
+                    angle = angle_to_player;
                 }
-                if(angle == 360 || angle == -360)
-                    angle = 0;
-                if(action_left){ 
-                    action_left--;
-                    if (action == "turn_left"){
-                        angle = angle + 0.05;
-                    }else if(action == "turn_right"){
-                        angle = angle - 0.05;
-                    }else if(action == "follow"){
-                        float diffx = player.pos.x - pos.x;
-                        float diffy = player.pos.y - pos.y;
-                        float angle_to_player = (-(GLfloat)atan2(diffx, diffy)/3.1415*180.0)-180;
-                        angle = angle_to_player;
-                    }
-                } 
-                else{
-                    string todo[5] = {"turn_left", "turn_right", "none"};
-                    action = todo[rand()%3];
-                    action_left = 2000;
-                }
+            } 
+            else{
+                string todo[3] = {"turn_left", "turn_right", "none"};
+                action = todo[rand()%3];
+                action_left = 2000;
             }
         }
-        // for (int i = 0; i < 6; ++i){
-        //     colisionZombieZombie(all_zombies[i]);
-        // }
     }
 
 
