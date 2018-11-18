@@ -43,6 +43,8 @@ GameObject blood(origem, textures[0], BRANCO, 5, 5, 0);
 Animation player_animations[27];
 Animation zombie_animations[3];
 
+GameObject objs[] = {obstaculo_0, obstaculo_1, obstaculo_2};
+
 Player player(knife, 0.0f, 0.0f, 10.0f, 0, PRETO, inventory);
 
 
@@ -109,7 +111,7 @@ void updateGame(){
         zombies[i].update(game_clock, frame_time, player, zombies);
     }
     game_clock++;
-    player.caminha(keyStates, obstaculo_2);
+    player.caminha(keyStates, objs);
     player.update(game_clock, frame_time);
     if (game_clock == (421+43+3)*10000){
         game_clock = 0;
