@@ -50,6 +50,12 @@ class Player {
         }
     }
 
+
+    // bool objectColide(GameObject obj){
+    //     return(!((left()>obj.right() || right()<obj.left()) || 
+    //               (bot()>obj.top()   ||   top()<obj.bot())));
+    // }
+
     void hundleKeyUp(int keyStates[256], char key){
         if (key == 'a' || key == 'A'){ keyStates['a'] = 0; keyStates['A'] = 0;}
         if (key == 's' || key == 'S'){ keyStates['s'] = 0; keyStates['S'] = 0;}
@@ -152,7 +158,23 @@ class Player {
         }
     }
 
-    void caminha(int* keyStates){
+
+    bool colideObj(GameObject obj, float x_ahead, float y_ahead){
+        float dx = obj.pos.x - pos.x + x_ahead;
+        float dy = obj.pos.y - pos.y + y_ahead;
+        float distance = sqrt((pow(dy, 2) + pow(dx, 2)));
+        float angle_to = -(obj.angle - ((-(GLfloat)atan2(dx, dy)/3.1415*180.0)));
+        if (angle_to>360){angle_to -=360;}
+        if((angle_to>135 && angle_to<225) ||
+           (angle_to>0   && angle_to<45)  ||
+           (angle_to>315 && angle_to<360)){
+            return (distance < ((obj.height/2.0)*(1.0+sqrt(pow(sinf(angle_to*3.1415/180), 2)))));
+        }else{
+            return (distance < ((obj.height/2.0)*(1.0+sqrt(pow(cosf(angle_to*3.1415/180), 2)))));
+        }
+    }
+
+    void caminha(int* keyStates, GameObject obj){
         float speed_mult = 0.01;
         if (run)
             speed_mult = 0.017;
@@ -172,10 +194,10 @@ class Player {
         }else{
             velocidade = speed_mult;
         }
-        if(keyStates['w'] || keyStates['W'] ){ pos.y += velocidade; }
-        if(keyStates['s'] || keyStates['S'] ){ pos.y -= velocidade; }
-        if(keyStates['a'] || keyStates['A'] ){ pos.x -= velocidade; }
-        if(keyStates['d'] || keyStates['D'] ){ pos.x += velocidade; }
+        if(keyStates['w'] || keyStates['W'] ){ if(colideObj(obj, 0, -velocidade)){pos.y -= velocidade;}else{pos.y += velocidade;}}
+        if(keyStates['s'] || keyStates['S'] ){ if(colideObj(obj, 0, +velocidade)){pos.y += velocidade;}else{pos.y -= velocidade;}}
+        if(keyStates['a'] || keyStates['A'] ){ if(colideObj(obj, +velocidade, 0)){pos.x += velocidade;}else{pos.x -= velocidade;}}
+        if(keyStates['d'] || keyStates['D'] ){ if(colideObj(obj, -velocidade, 0)){pos.x -= velocidade;}else{pos.x += velocidade;}}
     }
 
     void rotate(int x, int y){

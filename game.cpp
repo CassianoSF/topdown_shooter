@@ -109,7 +109,7 @@ void updateGame(){
         zombies[i].update(game_clock, frame_time, player, zombies);
     }
     game_clock++;
-    player.caminha(keyStates);
+    player.caminha(keyStates, obstaculo_2);
     player.update(game_clock, frame_time);
     if (game_clock == (421+43+3)*10000){
         game_clock = 0;
